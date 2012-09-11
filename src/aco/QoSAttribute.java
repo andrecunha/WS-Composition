@@ -52,7 +52,7 @@ public class QoSAttribute {
 	 * @param aggregationMethod The aggregation method to be used. 
 	 * @param weight The weight of this attribute.
 	 */
-	public QoSAttribute(float[][] values, int aggregationMethod, int weight) {
+	public QoSAttribute(float[][] values, int aggregationMethod, float weight) {
 		
 		/* Check for the validity of the given values. */
 		for (int i = 0; i < values.length; i++) {
