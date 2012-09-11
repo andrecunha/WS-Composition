@@ -9,10 +9,10 @@ public class ACO {
 	public static float[][] calculateAggregatedQoS(
 			ArrayList<QoSAttribute> qosValues) {
 		float[][] aggregatedQoSValues;
-		aggregatedQoSValues = new float[qosValues.get(0).getValues().length][qosValues
-				.get(0).getValues()[0].length];
+		aggregatedQoSValues = new float[qosValues.get(0).getValues().length][];
 
 		for (int i = 0; i < aggregatedQoSValues.length; i++) {
+			aggregatedQoSValues[i] = new float[qosValues.get(0).getValues()[i].length];
 			Arrays.fill(aggregatedQoSValues[i], 0f);
 		}
 
