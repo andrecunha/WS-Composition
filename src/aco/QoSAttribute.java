@@ -6,16 +6,43 @@ public class QoSAttribute {
 	public static final int AGGREGATE_BY_PRODUCT = 0x01;
 	public static final int AGGREGATE_BY_AVERAGE = 0x02;
 
+	/**
+	 * The QoS values, normalized between 0 and 1.
+	 */
 	private float[][] values;
+
+	/**
+	 * The function to be used to compute the aggregated QoS.
+	 */
 	private int aggregationMethod;
+	
+	/**
+	 * The weight of this attribute.
+	 */
 	private float weight;
 
 	public QoSAttribute(float[][] values, int aggregationMethod, int weight) {
 		this.values = values;
 		this.aggregationMethod = aggregationMethod;
 		this.weight = weight;
+
+		for (int i = 0; i < values.length; i++) {
+			for (int j = 0; j < values[i].length; j++) {
+				if (values[i][j] > 1f || values[i][j] < 0f) {
+					throw new IllegalArgumentException(
+							String.format("values[%d][%d] is invalid: %d", i,
+									j, values[i][j]));
+				}
+			}
+		}
 	}
 
+	/**
+	 * Evaluates the aggregated QoS of a composition. 
+	 * @param composition A vector containing the index of the
+	 * 	concrete service corresponding to each abstract service.
+	 * @return The aggregated QoS value.
+	 */
 	public float getAggregatedQoS(int[] composition) {
 		float aggregatedQoS;
 
@@ -59,6 +86,10 @@ public class QoSAttribute {
 		return aggregatedQoS;
 	}
 
+	/**
+	 * 
+	 * @return The weight of this attribute.
+	 */
 	public float getWeight() {
 		return weight;
 	}
