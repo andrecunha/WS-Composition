@@ -7,8 +7,12 @@ import org.junit.Test;
 
 public class QoSAttributeTest {
 
-	public static final float[][] values = { { 1, 2, 3 }, { 4, 5 },
-			{ 7, 8, 9 } };
+	public static final float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f },
+			{ 0.5f, 0.5f, 1 } };
+	public static final float[][] invalidValues1 = { { 1.1f, 0.5f, 1 }, { 1, 0.5f },
+		{ 0.5f, 0.5f, 1 } };
+	public static final float[][] invalidValues2 = { { -1, 0.5f, 1 }, { 1, 0.5f },
+		{ 0.5f, 0.5f, 1 } };
 
 	public static QoSAttribute attrSum;
 	public static QoSAttribute attrProd;
@@ -46,27 +50,37 @@ public class QoSAttributeTest {
 		attrSum.getAggregatedQoS(composition);
 	}
 	
-	@Test
+	@Test(expected = IllegalArgumentException.class)
 	public void test4() {
-		int[] composition = { 0, 0, 0 };
-		assertEquals(attrSum.getAggregatedQoS(composition), 12f, 0f);
-		assertEquals(attrProd.getAggregatedQoS(composition), 28f, 0f);
-		assertEquals(attrAvg.getAggregatedQoS(composition), 4f, 0f);
+		new QoSAttribute(invalidValues1, 0, 0);
 	}
 	
-	@Test
+	@Test(expected = IllegalArgumentException.class)
 	public void test5() {
-		int[] composition = { 1, 0, 1 };
-		assertEquals(attrSum.getAggregatedQoS(composition), 14f, 0f);
-		assertEquals(attrProd.getAggregatedQoS(composition), 64f, 0f);
-		assertEquals(attrAvg.getAggregatedQoS(composition), 4.667f, 0.001f);
+		new QoSAttribute(invalidValues2, 0, 0);
 	}
 	
 	@Test
 	public void test6() {
+		int[] composition = { 0, 0, 0 };
+		assertEquals(attrSum.getAggregatedQoS(composition), 2.5f, 0f);
+		assertEquals(attrProd.getAggregatedQoS(composition), 0.5, 0f);
+		assertEquals(attrAvg.getAggregatedQoS(composition), 0.833, 0.001f);
+	}
+	
+	@Test
+	public void test7() {
+		int[] composition = { 1, 0, 1 };
+		assertEquals(attrSum.getAggregatedQoS(composition), 2f, 0f);
+		assertEquals(attrProd.getAggregatedQoS(composition), 0.25f, 0f);
+		assertEquals(attrAvg.getAggregatedQoS(composition), 0.667f, 0.001f);
+	}
+	
+	@Test
+	public void test8() {
 		int[] composition = { 2, 1, 2 };
-		assertEquals(attrSum.getAggregatedQoS(composition), 17f, 0f);
-		assertEquals(attrProd.getAggregatedQoS(composition), 135f, 0f);
-		assertEquals(attrAvg.getAggregatedQoS(composition), 5.667f, 0.001f);
+		assertEquals(attrSum.getAggregatedQoS(composition), 2.5f, 0f);
+		assertEquals(attrProd.getAggregatedQoS(composition), 0.5f, 0f);
+		assertEquals(attrAvg.getAggregatedQoS(composition), 0.833f, 0.001f);
 	}
 }
