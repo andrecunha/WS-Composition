@@ -1,6 +1,7 @@
 package aco;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Represents an ant, the basic computational entity in ACO.
@@ -77,7 +78,7 @@ public class Ant {
 		}
 
 		for (int j = 0; j < probabilities.length; j++) {
-			probabilities[j] /= (probabilities[j] / sum);
+			probabilities[j] = (probabilities[j] / sum);
 		}
 
 		mPartialSolution[mCurrentPosition] = selectWithProbabilities(probabilities);
@@ -120,5 +121,36 @@ public class Ant {
 		}
 
 		return elem;
+	}
+
+	public static void main(String[] args) {
+		float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
+
+		QoSAttribute attrSum = new QoSAttribute(values,
+				QoSAttribute.AGGREGATE_BY_SUM, 1);
+		QoSAttribute attrProd = new QoSAttribute(values,
+				QoSAttribute.AGGREGATE_BY_PRODUCT, 1);
+		QoSAttribute attrAvg = new QoSAttribute(values,
+				QoSAttribute.AGGREGATE_BY_AVERAGE, 1);
+		
+		ArrayList<QoSAttribute> attrs = new ArrayList<QoSAttribute>();
+		attrs.add(attrSum);
+		attrs.add(attrProd);
+		attrs.add(attrAvg);
+		
+		float[][] pheromone = {{1, 1, 1}, {1, 1}, {1, 1, 1}};
+		float[][] aggregatedQoS = ACO.calculateAggregatedQoS(attrs);
+		float alpha = 1;
+		float beta = 1;
+		Ant a = new Ant(attrs, aggregatedQoS, pheromone, alpha, beta);
+		
+		System.out.println(Arrays.toString(aggregatedQoS[0]) + aggregatedQoS[0].length);
+		System.out.println(Arrays.toString(aggregatedQoS[1]) + aggregatedQoS[1].length);
+		System.out.println(Arrays.toString(aggregatedQoS[2]) + aggregatedQoS[2].length);
+		
+		for (int i=0; i < 5; i++) {
+			a.walk();
+			System.out.println(a.getNewPheromone());
+		}
 	}
 }
