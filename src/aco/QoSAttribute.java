@@ -23,7 +23,7 @@ public class QoSAttribute {
 	/**
 	 * The QoS values.
 	 */
-	private float[][] values;
+	private float[][] mValues;
 
 	/**
 	 * The function to be used to compute the aggregated QoS.
@@ -32,19 +32,19 @@ public class QoSAttribute {
 	 * 		- AGGREGATE_BY_PRODUCT;
 	 * 		- AGGREGATE_BY_AVERAGE.
 	 */
-	private int aggregationMethod;
+	private int mAggregationMethod;
 	
 	/**
 	 * The weight of this attribute.
 	 */
-	private float weight;
+	private float mWeight;
 	
 	/**
 	 * The maximum possible QoS for the current
 	 * 	the aggregation function and the current number of
 	 * 	virtual services.
 	 */
-	private float maximumQoS;
+	private float mMaximumQoS;
 
 	/**
 	 * Creates a QoSAttribute instance.
@@ -65,22 +65,22 @@ public class QoSAttribute {
 			}
 		}
 		
-		this.values = values;
-		this.aggregationMethod = aggregationMethod;
-		this.weight = weight;
+		mValues = values;
+		mAggregationMethod = aggregationMethod;
+		mWeight = weight;
 
 		switch (aggregationMethod) {
 		case AGGREGATE_BY_SUM:
-			maximumQoS = values.length;
+			mMaximumQoS = values.length;
 			break;
 		case AGGREGATE_BY_PRODUCT:
-			maximumQoS = 1f;
+			mMaximumQoS = 1f;
 			break;
 		case AGGREGATE_BY_AVERAGE:
-			maximumQoS = 1f;
+			mMaximumQoS = 1f;
 			break;
 		default:
-			maximumQoS = -1;
+			mMaximumQoS = -1;
 			break;
 		}
 	}
@@ -94,35 +94,35 @@ public class QoSAttribute {
 	public float getAggregatedQoS(int[] composition) {
 		float aggregatedQoS;
 
-		if (composition.length != values.length) {
+		if (composition.length != mValues.length) {
 			throw new IllegalArgumentException(String.format(
-					"Dimensions mismatch. Expected %d, got %d.", values.length,
+					"Dimensions mismatch. Expected %d, got %d.", mValues.length,
 					composition.length));
 		}
 		for (int i = 0; i < composition.length; i++) {
-			if ((composition[i] < 0) || (composition[i] >= values[i].length)) {
+			if ((composition[i] < 0) || (composition[i] >= mValues[i].length)) {
 				throw new IllegalArgumentException(String.format(
 						"Composition[%d] is invalid: ", i, composition[i]));
 			}
 		}
 
-		switch (aggregationMethod) {
+		switch (mAggregationMethod) {
 		case AGGREGATE_BY_SUM:
 			aggregatedQoS = 0f;
 			for (int i = 0; i < composition.length; i++) {
-				aggregatedQoS += values[i][composition[i]];
+				aggregatedQoS += mValues[i][composition[i]];
 			}
 			break;
 		case AGGREGATE_BY_PRODUCT:
 			aggregatedQoS = 1f;
 			for (int i = 0; i < composition.length; i++) {
-				aggregatedQoS *= values[i][composition[i]];
+				aggregatedQoS *= mValues[i][composition[i]];
 			}
 			break;
 		case AGGREGATE_BY_AVERAGE:
 			aggregatedQoS = 0f;
 			for (int i = 0; i < composition.length; i++) {
-				aggregatedQoS += values[i][composition[i]];
+				aggregatedQoS += mValues[i][composition[i]];
 			}
 			aggregatedQoS /= composition.length;
 			break;
@@ -139,7 +139,7 @@ public class QoSAttribute {
 	 * @return The maximum QoS value.
 	 */
 	public float getMaximumQoS() {
-		return maximumQoS;
+		return mMaximumQoS;
 	}
 	
 	/**
@@ -147,7 +147,7 @@ public class QoSAttribute {
 	 * @return The weight of this attribute.
 	 */
 	public float getWeight() {
-		return weight;
+		return mWeight;
 	}
 	
 	/**
@@ -155,6 +155,6 @@ public class QoSAttribute {
 	 * @return The QoS values.
 	 */
 	public float[][] getValues() {
-		return values;
+		return mValues;
 	}
 }
