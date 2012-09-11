@@ -1,6 +1,5 @@
 package aco;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -15,7 +14,7 @@ public class Ant {
 	public static final int FORWARD = 0x00;
 	public static final int BACKWARD = 0x01;
 
-	private ArrayList<QoSAttribute> mQoSValues;
+	private QoSAttribute[] mQoSValues;
 	private float[][] mAggregatedQoSValues;
 	private int mCurrentPosition; // Posição do último serviço que foi
 									// escolhido.
@@ -28,10 +27,10 @@ public class Ant {
 	private int nestPosition;
 	private int sourcePosition;
 
-	public Ant(ArrayList<QoSAttribute> qosValues,
+	public Ant(QoSAttribute[] qosValues,
 			float[][] aggregatedQoSValues, float[][] pheromone, float alpha,
 			float beta) {
-		int numberOfAbstractServices = qosValues.get(0).getValues().length;
+		int numberOfAbstractServices = qosValues[0].getValues().length;
 
 		nestPosition = -1;
 		sourcePosition = numberOfAbstractServices;
@@ -90,12 +89,12 @@ public class Ant {
 			float currentQoSValue = 0f;
 			float maximumQoSValue = 0f;
 
-			for (int i = 0; i < mQoSValues.size(); i++) {
-				currentQoSValue += mQoSValues.get(i).getAggregatedQoS(
+			for (int i = 0; i < mQoSValues.length; i++) {
+				currentQoSValue += mQoSValues[i].getAggregatedQoS(
 						mPartialSolution)
-						* mQoSValues.get(i).getWeight();
-				maximumQoSValue += mQoSValues.get(i).getMaximumQoS()
-						* mQoSValues.get(i).getWeight();
+						* mQoSValues[i].getWeight();
+				maximumQoSValue += mQoSValues[i].getMaximumQoS()
+						* mQoSValues[i].getWeight();
 			}
 
 			return currentQoSValue / maximumQoSValue;
@@ -133,10 +132,7 @@ public class Ant {
 		QoSAttribute attrAvg = new QoSAttribute(values,
 				QoSAttribute.AGGREGATE_BY_AVERAGE, 1);
 		
-		ArrayList<QoSAttribute> attrs = new ArrayList<QoSAttribute>();
-		attrs.add(attrSum);
-		attrs.add(attrProd);
-		attrs.add(attrAvg);
+		QoSAttribute[] attrs = {attrSum, attrProd, attrAvg};
 		
 		float[][] pheromone = {{1, 1, 1}, {1, 1}, {1, 1, 1}};
 		float[][] aggregatedQoS = ACO.calculateAggregatedQoS(attrs);
