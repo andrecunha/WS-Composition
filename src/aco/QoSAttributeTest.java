@@ -83,4 +83,11 @@ public class QoSAttributeTest {
 		assertEquals(attrProd.getAggregatedQoS(composition), 0.5f, 0f);
 		assertEquals(attrAvg.getAggregatedQoS(composition), 0.833f, 0.001f);
 	}
+	
+	@Test
+	public void test9() {
+		assertEquals(attrSum.getMaximumQoS(), 3f, 0f);
+		assertEquals(attrProd.getMaximumQoS(), 1f, 0f);
+		assertEquals(attrAvg.getMaximumQoS(), 1f, 0f);
+	}
 }
