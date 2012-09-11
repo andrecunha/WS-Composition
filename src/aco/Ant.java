@@ -20,6 +20,7 @@ public class Ant {
 									// escolhido.
 	private int mDirection;
 	private int[] mPartialSolution;
+	private boolean mAlreadyFoundCompleteSolution;
 	private float[][] mPheromone;
 	private float mAlpha;
 	private float mBeta;
@@ -27,9 +28,8 @@ public class Ant {
 	private int nestPosition;
 	private int sourcePosition;
 
-	public Ant(QoSAttribute[] qosValues,
-			float[][] aggregatedQoSValues, float[][] pheromone, float alpha,
-			float beta) {
+	public Ant(QoSAttribute[] qosValues, float[][] aggregatedQoSValues,
+			float[][] pheromone, float alpha, float beta) {
 		int numberOfAbstractServices = qosValues[0].getValues().length;
 
 		nestPosition = -1;
@@ -39,6 +39,7 @@ public class Ant {
 		mCurrentPosition = -1;
 		mDirection = FORWARD;
 		mPartialSolution = new int[numberOfAbstractServices];
+		mAlreadyFoundCompleteSolution = false;
 		mAggregatedQoSValues = aggregatedQoSValues;
 		mPheromone = pheromone;
 		mAlpha = alpha;
@@ -63,6 +64,7 @@ public class Ant {
 
 		if (mCurrentPosition == nestPosition
 				|| mCurrentPosition == sourcePosition) {
+			mAlreadyFoundCompleteSolution = true;
 			return;
 		}
 
@@ -85,21 +87,20 @@ public class Ant {
 
 	// TODO: Verificar se está certo.
 	public float getNewPheromone() {
-		if (mCurrentPosition == sourcePosition) {
-			float currentQoSValue = 0f;
-			float maximumQoSValue = 0f;
-
-			for (int i = 0; i < mQoSValues.length; i++) {
-				currentQoSValue += mQoSValues[i].getAggregatedQoS(
-						mPartialSolution)
-						* mQoSValues[i].getWeight();
-				maximumQoSValue += mQoSValues[i].getMaximumQoS()
-						* mQoSValues[i].getWeight();
-			}
-
-			return currentQoSValue / maximumQoSValue;
+		if (mCurrentPosition == sourcePosition
+				|| (mCurrentPosition == nestPosition && mAlreadyFoundCompleteSolution)) {
+			return ACO.calculateAggregatedQoS(mQoSValues, mPartialSolution);
 		}
 		return 0f;
+	}
+
+	public int[] getSolution() {
+		if (mCurrentPosition == sourcePosition
+				|| (mCurrentPosition == nestPosition && mAlreadyFoundCompleteSolution)) {
+			return mPartialSolution;
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -131,20 +132,23 @@ public class Ant {
 				QoSAttribute.AGGREGATE_BY_PRODUCT, 1);
 		QoSAttribute attrAvg = new QoSAttribute(values,
 				QoSAttribute.AGGREGATE_BY_AVERAGE, 1);
-		
-		QoSAttribute[] attrs = {attrSum, attrProd, attrAvg};
-		
-		float[][] pheromone = {{1, 1, 1}, {1, 1}, {1, 1, 1}};
-		float[][] aggregatedQoS = ACO.calculateAggregatedQoS(attrs);
+
+		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
+
+		float[][] pheromone = { { 1, 1, 1 }, { 1, 1 }, { 1, 1, 1 } };
+		float[][] aggregatedQoS = ACO.calculateResultantQoS(attrs);
 		float alpha = 1;
 		float beta = 1;
 		Ant a = new Ant(attrs, aggregatedQoS, pheromone, alpha, beta);
-		
-		System.out.println(Arrays.toString(aggregatedQoS[0]) + aggregatedQoS[0].length);
-		System.out.println(Arrays.toString(aggregatedQoS[1]) + aggregatedQoS[1].length);
-		System.out.println(Arrays.toString(aggregatedQoS[2]) + aggregatedQoS[2].length);
-		
-		for (int i=0; i < 5; i++) {
+
+		System.out.println(Arrays.toString(aggregatedQoS[0])
+				+ aggregatedQoS[0].length);
+		System.out.println(Arrays.toString(aggregatedQoS[1])
+				+ aggregatedQoS[1].length);
+		System.out.println(Arrays.toString(aggregatedQoS[2])
+				+ aggregatedQoS[2].length);
+
+		for (int i = 0; i < 5; i++) {
 			a.walk();
 			System.out.println(a.getNewPheromone());
 		}
