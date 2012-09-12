@@ -1,6 +1,5 @@
 package aco;
 
-import java.util.Arrays;
 
 /**
  * Represents an ant, the basic computational entity in ACO.
@@ -189,37 +188,5 @@ public class Ant {
 		}
 
 		return elem;
-	}
-
-	public static void main(String[] args) {
-		float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
-
-		QoSAttribute attrSum = new QoSAttribute(values,
-				QoSAttribute.AGGREGATE_BY_SUM, 0.2f);
-		QoSAttribute attrProd = new QoSAttribute(values,
-				QoSAttribute.AGGREGATE_BY_PRODUCT, 0.3f);
-		QoSAttribute attrAvg = new QoSAttribute(values,
-				QoSAttribute.AGGREGATE_BY_AVERAGE, 0.5f);
-
-		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
-
-		float[][] pheromone = { { 1, 1, 1 }, { 1, 1 }, { 1, 1, 1 } };
-		float[][] aggregatedQoS = QoSAttribute.calculateTotalQoS(attrs);
-		float alpha = 1;
-		float beta = 1;
-		Ant a = new Ant(attrs, aggregatedQoS, pheromone, alpha, beta);
-
-		System.out.println(Arrays.toString(aggregatedQoS[0])
-				+ aggregatedQoS[0].length);
-		System.out.println(Arrays.toString(aggregatedQoS[1])
-				+ aggregatedQoS[1].length);
-		System.out.println(Arrays.toString(aggregatedQoS[2])
-				+ aggregatedQoS[2].length);
-
-		for (int i = 0; i < 12; i++) {
-			a.walk();
-			System.out.println(a.getNewPheromone());
-			System.out.println(Arrays.toString(a.getSolution()));
-		}
 	}
 }

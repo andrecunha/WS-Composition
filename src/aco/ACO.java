@@ -76,7 +76,7 @@ public class ACO extends Thread {
 	 *            The relative importance of the heuristic information (the
 	 *            total QoS).
 	 * @param rho
-	 *            The evaporation coefficient of pheromone.
+	 *            The evaporation coefficient of the pheromone.
 	 * @param initialPheromone
 	 *            The initial amount of pheromone that will be deposited in each
 	 *            concrete service before the ants start to walk.
@@ -89,7 +89,6 @@ public class ACO extends Thread {
 			float beta, float rho, float initialPheromone, int maxIterations,
 			float minQoS) {
 		mQoSAttributes = qosAttributes;
-		mAnts = new Ant[noAnts];
 
 		mPheromone = new float[qosAttributes[0].getValues().length][];
 		for (int i = 0; i < mPheromone.length; i++) {
@@ -98,11 +97,13 @@ public class ACO extends Thread {
 		}
 
 		mTotalQoS = QoSAttribute.calculateTotalQoS(qosAttributes);
+		mAnts = new Ant[noAnts];
 		for (int i = 0; i < noAnts; i++) {
 			mAnts[i] = new Ant(mQoSAttributes, mTotalQoS, mPheromone, alpha,
 					beta);
 		}
 
+		mCurrentSolution = new int[mPheromone.length];
 		mMaxIterations = maxIterations;
 		mMinAggregatedQoS = minQoS;
 		mRho = rho;
@@ -112,7 +113,7 @@ public class ACO extends Thread {
 	public void run() {
 		mIterations = 0;
 		mCurrentAggregatedQoS = 0f;
-		mCurrentSolution = null;
+		Arrays.fill(mCurrentSolution, 0);
 
 		while (!shouldStop()) {
 			for (int i = 0; i < mAnts.length; i++) {
@@ -211,9 +212,45 @@ public class ACO extends Thread {
 
 			mCurrentSolution[i] = indexOfMaxPheromone;
 		}
+		mCurrentAggregatedQoS = QoSAttribute.calculateAggregatedQoS(
+				mQoSAttributes, mCurrentSolution);
+	}
+
+	/**
+	 * 
+	 * @return The solution found.
+	 */
+	public int[] getSolution() {
+		return mCurrentSolution;
 	}
 
 	public static void main(String[] args) {
+		float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
 
+		QoSAttribute attrSum = new QoSAttribute(values,
+				QoSAttribute.AGGREGATE_BY_SUM, 0.2f);
+		QoSAttribute attrProd = new QoSAttribute(values,
+				QoSAttribute.AGGREGATE_BY_PRODUCT, 0.3f);
+		QoSAttribute attrAvg = new QoSAttribute(values,
+				QoSAttribute.AGGREGATE_BY_AVERAGE, 0.5f);
+
+		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
+
+		float alpha = 1;
+		float beta = 1;
+		float rho = 0.1f;
+
+		ACO aco = new ACO(20, attrs, alpha, beta, rho, 1, -1, 1.0f);
+		aco.start();
+		try {
+			aco.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println(Arrays.toString(aco.mCurrentSolution));
+		System.out.println(QoSAttribute.calculateAggregatedQoS(attrs,
+				aco.mCurrentSolution));
+		System.out.println(aco.mIterations);
 	}
 }
