@@ -89,7 +89,8 @@ public class Ant {
 	public float getNewPheromone() {
 		if (mCurrentPosition == sourcePosition
 				|| (mCurrentPosition == nestPosition && mAlreadyFoundCompleteSolution)) {
-			return ACO.calculateAggregatedQoS(mQoSValues, mPartialSolution);
+			return QoSAttribute.calculateAggregatedQoS(mQoSValues,
+					mPartialSolution);
 		}
 		return 0f;
 	}
@@ -136,7 +137,7 @@ public class Ant {
 		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
 
 		float[][] pheromone = { { 1, 1, 1 }, { 1, 1 }, { 1, 1, 1 } };
-		float[][] aggregatedQoS = ACO.calculateResultantQoS(attrs);
+		float[][] aggregatedQoS = QoSAttribute.calculateResultantQoS(attrs);
 		float alpha = 1;
 		float beta = 1;
 		Ant a = new Ant(attrs, aggregatedQoS, pheromone, alpha, beta);

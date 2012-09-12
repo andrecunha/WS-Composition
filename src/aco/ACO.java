@@ -19,6 +19,17 @@ public class ACO extends Thread {
 	private volatile float mBestQoS;
 	private volatile int[] mBestSolution;
 
+	/**
+	 * 
+	 * @param noAnts
+	 * @param qosAttributes
+	 * @param alpha
+	 * @param beta
+	 * @param rho
+	 * @param initialPheromone
+	 * @param maxIterations
+	 * @param minQoS
+	 */
 	public ACO(int noAnts, QoSAttribute[] qosAttributes, float alpha,
 			float beta, float rho, float initialPheromone, int maxIterations,
 			float minQoS) {
@@ -31,7 +42,7 @@ public class ACO extends Thread {
 			Arrays.fill(mPheromone[i], initialPheromone);
 		}
 
-		mResultantQoS = calculateResultantQoS(qosAttributes);
+		mResultantQoS = QoSAttribute.calculateResultantQoS(qosAttributes);
 		for (int i = 0; i < noAnts; i++) {
 			mAnts[i] = new Ant(mQoSAttributes, mResultantQoS, mPheromone,
 					alpha, beta);
@@ -58,6 +69,10 @@ public class ACO extends Thread {
 		}
 	}
 
+	/**
+	 * 
+	 * @param milisTimeOut
+	 */
 	public void startWithTimeOut(long milisTimeOut) {
 		Timer timer = new Timer();
 		TimerTask task = new TimerTask() {
@@ -72,6 +87,10 @@ public class ACO extends Thread {
 		start();
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	private boolean shouldStop() {
 		if (isInterrupted()) {
 			return true;
@@ -93,6 +112,9 @@ public class ACO extends Thread {
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void updatePheromone() {
 		for (int i = 0; i < mPheromone.length; i++) {
 			for (int j = 0; j < mPheromone[i].length; j++) {
@@ -114,6 +136,9 @@ public class ACO extends Thread {
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void updateBestSolution() {
 		for (int i = 0; i < mPheromone.length; i++) {
 			int indexOfMaxPheromone = 0;
@@ -131,45 +156,5 @@ public class ACO extends Thread {
 
 	public static void main(String[] args) {
 
-	}
-
-	// TODO: Testar essa função.
-	public static float[][] calculateResultantQoS(QoSAttribute[] qosValues) {
-		float[][] aggregatedQoSValues;
-		aggregatedQoSValues = new float[qosValues[0].getValues().length][];
-
-		for (int i = 0; i < aggregatedQoSValues.length; i++) {
-			aggregatedQoSValues[i] = new float[qosValues[0].getValues()[i].length];
-			Arrays.fill(aggregatedQoSValues[i], 0f);
-		}
-
-		for (int attr = 0; attr < qosValues.length; attr++) {
-			QoSAttribute currentAttribute = qosValues[attr];
-			float[][] currentValues = currentAttribute.getValues();
-
-			for (int i = 0; i < currentValues.length; i++) {
-				for (int j = 0; j < currentValues[i].length; j++) {
-					aggregatedQoSValues[i][j] += currentValues[i][j]
-							* currentAttribute.getWeight();
-				}
-			}
-		}
-
-		return aggregatedQoSValues;
-	}
-
-	public static float calculateAggregatedQoS(QoSAttribute[] attributes,
-			int[] solution) {
-		float currentQoSValue = 0f;
-		float maximumQoSValue = 0f;
-
-		for (int i = 0; i < attributes.length; i++) {
-			currentQoSValue += attributes[i].getAggregatedQoS(solution)
-					* attributes[i].getWeight();
-			maximumQoSValue += attributes[i].getMaximumQoS()
-					* attributes[i].getWeight();
-		}
-
-		return currentQoSValue / maximumQoSValue;
 	}
 }

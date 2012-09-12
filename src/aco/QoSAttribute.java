@@ -1,5 +1,7 @@
 package aco;
 
+import java.util.Arrays;
+
 /**
  * 
  * This class represents a QoS attribute, which is composed by:
@@ -156,5 +158,55 @@ public class QoSAttribute {
 	 */
 	public float[][] getValues() {
 		return mValues;
+	}
+	
+	/**
+	 * 
+	 * @param qosValues
+	 * @return
+	 */
+	public static float[][] calculateResultantQoS(QoSAttribute[] qosValues) {
+		float[][] aggregatedQoSValues;
+		aggregatedQoSValues = new float[qosValues[0].getValues().length][];
+
+		for (int i = 0; i < aggregatedQoSValues.length; i++) {
+			aggregatedQoSValues[i] = new float[qosValues[0].getValues()[i].length];
+			Arrays.fill(aggregatedQoSValues[i], 0f);
+		}
+
+		for (int attr = 0; attr < qosValues.length; attr++) {
+			QoSAttribute currentAttribute = qosValues[attr];
+			float[][] currentValues = currentAttribute.getValues();
+
+			for (int i = 0; i < currentValues.length; i++) {
+				for (int j = 0; j < currentValues[i].length; j++) {
+					aggregatedQoSValues[i][j] += currentValues[i][j]
+							* currentAttribute.getWeight();
+				}
+			}
+		}
+
+		return aggregatedQoSValues;
+	}
+
+	/**
+	 * 
+	 * @param attributes
+	 * @param solution
+	 * @return
+	 */
+	public static float calculateAggregatedQoS(QoSAttribute[] attributes,
+			int[] solution) {
+		float currentQoSValue = 0f;
+		float maximumQoSValue = 0f;
+
+		for (int i = 0; i < attributes.length; i++) {
+			currentQoSValue += attributes[i].getAggregatedQoS(solution)
+					* attributes[i].getWeight();
+			maximumQoSValue += attributes[i].getMaximumQoS()
+					* attributes[i].getWeight();
+		}
+
+		return currentQoSValue / maximumQoSValue;
 	}
 }
