@@ -84,8 +84,7 @@ public class Ant {
 
 		mPartialSolution[mCurrentPosition] = selectWithProbabilities(probabilities);
 	}
-
-	// TODO: Verificar se está certo.
+	
 	public float getNewPheromone() {
 		if (mCurrentPosition == sourcePosition
 				|| (mCurrentPosition == nestPosition && mAlreadyFoundCompleteSolution)) {

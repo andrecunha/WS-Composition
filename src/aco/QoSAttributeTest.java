@@ -19,7 +19,7 @@ public class QoSAttributeTest {
 	public static QoSAttribute attrAvg;
 
 	@BeforeClass
-	public static void init() {
+	public static void setUpBeforeClass() throws Exception {
 		attrSum = new QoSAttribute(values, QoSAttribute.AGGREGATE_BY_SUM, 1);
 		attrProd = new QoSAttribute(values, QoSAttribute.AGGREGATE_BY_PRODUCT,
 				1);

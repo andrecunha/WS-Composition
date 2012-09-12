@@ -4,6 +4,11 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * 
+ * @author Andre Luiz Verucci da Cunha
+ *
+ */
 public class ACO extends Thread {
 
 	private Ant[] mAnts;
