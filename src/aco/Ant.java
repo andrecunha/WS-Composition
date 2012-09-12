@@ -136,7 +136,7 @@ public class Ant {
 		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
 
 		float[][] pheromone = { { 1, 1, 1 }, { 1, 1 }, { 1, 1, 1 } };
-		float[][] aggregatedQoS = QoSAttribute.calculateResultantQoS(attrs);
+		float[][] aggregatedQoS = QoSAttribute.calculateTotalQoS(attrs);
 		float alpha = 1;
 		float beta = 1;
 		Ant a = new Ant(attrs, aggregatedQoS, pheromone, alpha, beta);

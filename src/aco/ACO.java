@@ -47,7 +47,7 @@ public class ACO extends Thread {
 			Arrays.fill(mPheromone[i], initialPheromone);
 		}
 
-		mResultantQoS = QoSAttribute.calculateResultantQoS(qosAttributes);
+		mResultantQoS = QoSAttribute.calculateTotalQoS(qosAttributes);
 		for (int i = 0; i < noAnts; i++) {
 			mAnts[i] = new Ant(mQoSAttributes, mResultantQoS, mPheromone,
 					alpha, beta);
