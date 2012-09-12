@@ -5,35 +5,85 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
+ * The entry point for the Ant Colony Optimization algorithm.
  * 
  * @author Andre Luiz Verucci da Cunha
- *
+ * 
  */
 public class ACO extends Thread {
 
+	/**
+	 * The ants that will traverse the search space.
+	 */
 	private Ant[] mAnts;
-	private QoSAttribute[] mQoSAttributes;
-	private float[][] mResultantQoS;
-	private float[][] mPheromone;
-	private float mRho;
-
-	private int mMaxIterations;
-	private float mMinQoS;
-
-	private volatile int mIterations;
-	private volatile float mBestQoS;
-	private volatile int[] mBestSolution;
 
 	/**
+	 * The QoS attributes to be considered.
+	 */
+	private QoSAttribute[] mQoSAttributes;
+
+	/**
+	 * The total QoS of each concrete service.
+	 */
+	private float[][] mTotalQoS;
+
+	/**
+	 * The amount of pheromone associated with each concrete service.
+	 */
+	private float[][] mPheromone;
+
+	/**
+	 * The evaporation coefficient of the pheromone.
+	 */
+	private float mRho;
+
+	/**
+	 * The maximum number of iterations. On each iteration, all the ants move
+	 * one step forward each.
+	 */
+	private int mMaxIterations;
+
+	/**
+	 * The minimum acceptable aggregated QoS of a solution.
+	 */
+	private float mMinAggregatedQoS;
+
+	/**
+	 * The number of iterations already performed.
+	 */
+	private volatile int mIterations;
+
+	/**
+	 * The most reinforced composition currently in the graph.
+	 */
+	private volatile int[] mCurrentSolution;
+
+	/**
+	 * The aggregated QoS of the current solution.
+	 */
+	private volatile float mCurrentAggregatedQoS;
+
+	/**
+	 * Creates an ACO instance.
 	 * 
 	 * @param noAnts
+	 *            The number of ants.
 	 * @param qosAttributes
+	 *            A vector containing the QoS attributes that will be used.
 	 * @param alpha
+	 *            The relative importance of the amount of pheromone.
 	 * @param beta
+	 *            The relative importance of the heuristic information (the
+	 *            total QoS).
 	 * @param rho
+	 *            The evaporation coefficient of pheromone.
 	 * @param initialPheromone
+	 *            The initial amount of pheromone that will be deposited in each
+	 *            concrete service before the ants start to walk.
 	 * @param maxIterations
+	 *            The maximum number of iterations.
 	 * @param minQoS
+	 *            The minimum acceptable QoS.
 	 */
 	public ACO(int noAnts, QoSAttribute[] qosAttributes, float alpha,
 			float beta, float rho, float initialPheromone, int maxIterations,
@@ -47,38 +97,40 @@ public class ACO extends Thread {
 			Arrays.fill(mPheromone[i], initialPheromone);
 		}
 
-		mResultantQoS = QoSAttribute.calculateTotalQoS(qosAttributes);
+		mTotalQoS = QoSAttribute.calculateTotalQoS(qosAttributes);
 		for (int i = 0; i < noAnts; i++) {
-			mAnts[i] = new Ant(mQoSAttributes, mResultantQoS, mPheromone,
-					alpha, beta);
+			mAnts[i] = new Ant(mQoSAttributes, mTotalQoS, mPheromone, alpha,
+					beta);
 		}
 
 		mMaxIterations = maxIterations;
-		mMinQoS = minQoS;
+		mMinAggregatedQoS = minQoS;
 		mRho = rho;
 	}
 
 	@Override
 	public void run() {
 		mIterations = 0;
-		mBestQoS = 0;
-		mBestSolution = null;
+		mCurrentAggregatedQoS = 0f;
+		mCurrentSolution = null;
 
 		while (!shouldStop()) {
 			for (int i = 0; i < mAnts.length; i++) {
 				mAnts[i].walk();
 			}
 			updatePheromone();
-			updateBestSolution();
+			updateCurrentSolution();
 			mIterations++;
 		}
 	}
 
 	/**
+	 * Runs ACO for a given amount of time.
 	 * 
-	 * @param milisTimeOut
+	 * @param millisTimeOut
+	 *            The execution timeout, in milliseconds.
 	 */
-	public void startWithTimeOut(long milisTimeOut) {
+	public void startWithTimeOut(long millisTimeOut) {
 		Timer timer = new Timer();
 		TimerTask task = new TimerTask() {
 
@@ -88,37 +140,39 @@ public class ACO extends Thread {
 			}
 		};
 
-		timer.schedule(task, milisTimeOut);
+		timer.schedule(task, millisTimeOut);
 		start();
 	}
 
 	/**
 	 * 
-	 * @return
+	 * @return True if the stop condition is satisfied; false otherwise.
 	 */
 	private boolean shouldStop() {
 		if (isInterrupted()) {
 			return true;
-		} else if (mMaxIterations < 0 && mMinQoS < 0) {
+		} else if (mMaxIterations < 0 && mMinAggregatedQoS < 0) {
 			/* Run forever. */
 			return false;
-		} else if (mMaxIterations > 0 && mMinQoS < 0) {
+		} else if (mMaxIterations > 0 && mMinAggregatedQoS < 0) {
 			/* Run for a fixed amount of iterations. */
 			return mIterations >= mMaxIterations;
-		} else if (mMaxIterations < 0 && mMinQoS > 0) {
+		} else if (mMaxIterations < 0 && mMinAggregatedQoS > 0) {
 			/* Run until a solution with an acceptable QoS is found. */
-			return mBestQoS >= mMinQoS;
+			return mCurrentAggregatedQoS >= mMinAggregatedQoS;
 		} else { // mMaxIterations > 0 && mMinQoS > 0
 			/*
-			 * Run until an acceptable solution is found OR until a maximum
-			 * number of iterations is reached.
+			 * Run until an acceptable solution is found OR a maximum number of
+			 * iterations is reached.
 			 */
-			return mBestQoS >= mMinQoS || mIterations >= mMaxIterations;
+			return mCurrentAggregatedQoS >= mMinAggregatedQoS
+					|| mIterations >= mMaxIterations;
 		}
 	}
 
 	/**
-	 * 
+	 * After each iteration, evaporates and deposits proper amounts of
+	 * pheromone.
 	 */
 	private void updatePheromone() {
 		for (int i = 0; i < mPheromone.length; i++) {
@@ -142,9 +196,9 @@ public class ACO extends Thread {
 	}
 
 	/**
-	 * 
+	 * Computes and stores the current solution.
 	 */
-	private void updateBestSolution() {
+	private void updateCurrentSolution() {
 		for (int i = 0; i < mPheromone.length; i++) {
 			int indexOfMaxPheromone = 0;
 			float maxPheromone = 0;
@@ -155,7 +209,7 @@ public class ACO extends Thread {
 				}
 			}
 
-			mBestSolution[i] = indexOfMaxPheromone;
+			mCurrentSolution[i] = indexOfMaxPheromone;
 		}
 	}
 

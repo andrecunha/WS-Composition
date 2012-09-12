@@ -14,21 +14,80 @@ public class Ant {
 	public static final int FORWARD = 0x00;
 	public static final int BACKWARD = 0x01;
 
+	/**
+	 * A vector containing all the QoS attributes to be considered.
+	 */
 	private QoSAttribute[] mQoSValues;
-	private float[][] mAggregatedQoSValues;
-	private int mCurrentPosition; // Posição do último serviço que foi
-									// escolhido.
+
+	/**
+	 * The total QoS of each service, used by the ant as a heuristic.
+	 */
+	private float[][] mTotalQoSValues;
+
+	/**
+	 * The index of the last virtual service to which a concrete service has
+	 * already been assigned.
+	 */
+	private int mCurrentPosition;
+
+	/**
+	 * The direction the ant is moving to. It is either FORWARD or BACKWARD.
+	 */
 	private int mDirection;
+
+	/**
+	 * The partial solution the ant has already built so far.
+	 */
 	private int[] mPartialSolution;
-	private boolean mAlreadyFoundCompleteSolution;
+
+	/**
+	 * Stores whether a complete solution has already been found. Used to
+	 * determine if we should return a solution when the ant is in the nest.
+	 */
+	private boolean mAlreadyFoundACompleteSolution;
+
+	/**
+	 * The pheromone value associated with each concrete service.
+	 */
 	private float[][] mPheromone;
+
+	/**
+	 * The relative importance of the amount of pheromone.
+	 */
 	private float mAlpha;
+
+	/**
+	 * The relative importance of the heuristic information (the total QoS).
+	 */
 	private float mBeta;
 
+	/**
+	 * Represents that the ant is in the nest. It's value is -1.
+	 */
 	private int nestPosition;
+
+	/**
+	 * Represents that the ant is in the food source. It's value is the number
+	 * of abstract services.
+	 */
 	private int sourcePosition;
 
-	public Ant(QoSAttribute[] qosValues, float[][] aggregatedQoSValues,
+	/**
+	 * Creates an ant.
+	 * 
+	 * @param qosValues
+	 *            A vector containing the QoS attributes.
+	 * @param totalQoSValues
+	 *            The total QoS value associated with each concrete service.
+	 * @param pheromone
+	 *            The pheromone associated with each concrete service.
+	 * @param alpha
+	 *            The relative importance of the amount of pheromone.
+	 * @param beta
+	 *            The relative importance of the heuristic information (the
+	 *            total QoS).
+	 */
+	public Ant(QoSAttribute[] qosValues, float[][] totalQoSValues,
 			float[][] pheromone, float alpha, float beta) {
 		int numberOfAbstractServices = qosValues[0].getValues().length;
 
@@ -39,8 +98,8 @@ public class Ant {
 		mCurrentPosition = -1;
 		mDirection = FORWARD;
 		mPartialSolution = new int[numberOfAbstractServices];
-		mAlreadyFoundCompleteSolution = false;
-		mAggregatedQoSValues = aggregatedQoSValues;
+		mAlreadyFoundACompleteSolution = false;
+		mTotalQoSValues = totalQoSValues;
 		mPheromone = pheromone;
 		mAlpha = alpha;
 		mBeta = beta;
@@ -64,17 +123,17 @@ public class Ant {
 
 		if (mCurrentPosition == nestPosition
 				|| mCurrentPosition == sourcePosition) {
-			mAlreadyFoundCompleteSolution = true;
+			mAlreadyFoundACompleteSolution = true;
 			return;
 		}
 
-		float[] probabilities = new float[mAggregatedQoSValues[mCurrentPosition].length];
+		float[] probabilities = new float[mTotalQoSValues[mCurrentPosition].length];
 		float sum = 0f;
 		for (int j = 0; j < probabilities.length; j++) {
 			probabilities[j] = ((float) Math.pow(
 					mPheromone[mCurrentPosition][j], mAlpha))
-					* ((float) Math.pow(
-							mAggregatedQoSValues[mCurrentPosition][j], mBeta));
+					* ((float) Math.pow(mTotalQoSValues[mCurrentPosition][j],
+							mBeta));
 			sum += probabilities[j];
 		}
 
@@ -84,23 +143,32 @@ public class Ant {
 
 		mPartialSolution[mCurrentPosition] = selectWithProbabilities(probabilities);
 	}
-	
+
+	/**
+	 * 
+	 * @return If this ant has just found a solution, returns the pheromone to
+	 *         be laid up all over this solution; otherwise, returns 0.
+	 */
 	public float getNewPheromone() {
 		if (mCurrentPosition == sourcePosition
-				|| (mCurrentPosition == nestPosition && mAlreadyFoundCompleteSolution)) {
+				|| (mCurrentPosition == nestPosition && mAlreadyFoundACompleteSolution)) {
 			return QoSAttribute.calculateAggregatedQoS(mQoSValues,
 					mPartialSolution);
 		}
 		return 0f;
 	}
 
+	/**
+	 * 
+	 * @return If this ant has just found a solution, returns the solution;
+	 *         otherwise, returns null.
+	 */
 	public int[] getSolution() {
 		if (mCurrentPosition == sourcePosition
-				|| (mCurrentPosition == nestPosition && mAlreadyFoundCompleteSolution)) {
+				|| (mCurrentPosition == nestPosition && mAlreadyFoundACompleteSolution)) {
 			return mPartialSolution;
-		} else {
-			return null;
 		}
+		return null;
 	}
 
 	/**
