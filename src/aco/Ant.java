@@ -127,11 +127,11 @@ public class Ant {
 		float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
 
 		QoSAttribute attrSum = new QoSAttribute(values,
-				QoSAttribute.AGGREGATE_BY_SUM, 1);
+				QoSAttribute.AGGREGATE_BY_SUM, 0.2f);
 		QoSAttribute attrProd = new QoSAttribute(values,
-				QoSAttribute.AGGREGATE_BY_PRODUCT, 1);
+				QoSAttribute.AGGREGATE_BY_PRODUCT, 0.3f);
 		QoSAttribute attrAvg = new QoSAttribute(values,
-				QoSAttribute.AGGREGATE_BY_AVERAGE, 1);
+				QoSAttribute.AGGREGATE_BY_AVERAGE, 0.5f);
 
 		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
 
@@ -148,9 +148,10 @@ public class Ant {
 		System.out.println(Arrays.toString(aggregatedQoS[2])
 				+ aggregatedQoS[2].length);
 
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 12; i++) {
 			a.walk();
 			System.out.println(a.getNewPheromone());
+			System.out.println(Arrays.toString(a.getSolution()));
 		}
 	}
 }
