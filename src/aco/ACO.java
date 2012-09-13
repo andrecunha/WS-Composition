@@ -132,6 +132,9 @@ public class ACO extends Thread {
 	 *            The execution timeout, in milliseconds.
 	 */
 	public void startWithTimeOut(long millisTimeOut) {
+		mMaxIterations = -1;
+		mMinAggregatedQoS = -1;
+		
 		Timer timer = new Timer();
 		TimerTask task = new TimerTask() {
 
@@ -223,6 +226,14 @@ public class ACO extends Thread {
 	public int[] getSolution() {
 		return mCurrentSolution;
 	}
+	
+	/**
+	 * 
+	 * @return The number of iterations performed.
+	 */
+	public int getNoIterations() {
+		return mIterations;
+	}
 
 	public static void main(String[] args) {
 		float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
@@ -240,7 +251,7 @@ public class ACO extends Thread {
 		float beta = 1;
 		float rho = 0.1f;
 
-		ACO aco = new ACO(20, attrs, alpha, beta, rho, 1, -1, 1.0f);
+		ACO aco = new ACO(20, attrs, alpha, beta, rho, 1, 20, 1.0f);
 		aco.start();
 		try {
 			aco.join();
