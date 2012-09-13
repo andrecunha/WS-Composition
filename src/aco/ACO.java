@@ -51,17 +51,17 @@ public class ACO extends Thread {
 	/**
 	 * The number of iterations already performed.
 	 */
-	private volatile int mIterations;
+	private int mIterations;
 
 	/**
 	 * The most reinforced composition currently in the graph.
 	 */
-	private volatile int[] mCurrentSolution;
+	private int[] mCurrentSolution;
 
 	/**
 	 * The aggregated QoS of the current solution.
 	 */
-	private volatile float mCurrentAggregatedQoS;
+	private float mCurrentAggregatedQoS;
 
 	/**
 	 * Creates an ACO instance.
@@ -89,7 +89,7 @@ public class ACO extends Thread {
 			float beta, float rho, float initialPheromone, int maxIterations,
 			float minQoS) {
 		mQoSAttributes = qosAttributes;
-
+		
 		mPheromone = new float[qosAttributes[0].getValues().length][];
 		for (int i = 0; i < mPheromone.length; i++) {
 			mPheromone[i] = new float[qosAttributes[0].getValues()[i].length];
@@ -134,7 +134,7 @@ public class ACO extends Thread {
 	public void startWithTimeOut(long millisTimeOut) {
 		mMaxIterations = -1;
 		mMinAggregatedQoS = -1;
-		
+
 		Timer timer = new Timer();
 		TimerTask task = new TimerTask() {
 
@@ -226,7 +226,7 @@ public class ACO extends Thread {
 	public int[] getSolution() {
 		return mCurrentSolution;
 	}
-	
+
 	/**
 	 * 
 	 * @return The number of iterations performed.
@@ -236,7 +236,8 @@ public class ACO extends Thread {
 	}
 
 	public static void main(String[] args) {
-		float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
+		float[][] values = { { 1, 0.5f, 1, 0.2f, 0.3f },
+				{ 1, 0.5f, 0.2f, 0.3f }, { 0.5f, 0.5f, 1, 0.2f, 0.3f } };
 
 		QoSAttribute attrSum = new QoSAttribute(values,
 				QoSAttribute.AGGREGATE_BY_SUM, 0.2f);
@@ -251,7 +252,7 @@ public class ACO extends Thread {
 		float beta = 1;
 		float rho = 0.1f;
 
-		ACO aco = new ACO(20, attrs, alpha, beta, rho, 1, 20, 1.0f);
+		ACO aco = new ACO(5, attrs, alpha, beta, rho, 1, 20, 1.0f);
 		aco.start();
 		try {
 			aco.join();
