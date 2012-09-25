@@ -1,4 +1,4 @@
-package aco;
+package general;
 
 import java.util.Arrays;
 

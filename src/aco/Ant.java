@@ -1,5 +1,7 @@
 package aco;
 
+import general.QoSAttribute;
+
 
 /**
  * Represents an ant, the basic computational entity in ACO.

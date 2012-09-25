@@ -1,5 +1,7 @@
 package aco;
 
+import general.QoSAttribute;
+
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
