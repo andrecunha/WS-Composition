@@ -1,7 +1,7 @@
-ACO-WS
+WS-Composition
 ======
 
-Ant Colony Optimization applied to dynamic Web services composition. Part of my Graduation Project.
+Ant Colony Optimization, Dynamic Programming and Integer Programming applied to dynamic Web services composition. Part of my Graduation Project.
 
 License
 =======
