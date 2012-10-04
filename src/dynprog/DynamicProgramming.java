@@ -3,17 +3,36 @@ package dynprog;
 import general.QoSAttribute;
 
 import java.util.Arrays;
-import java.util.Timer;
-import java.util.TimerTask;
 
+/**
+ * This class implements the Dynamic Programming algorithm.
+ * 
+ * @author Andre Luiz Verucci da Cunha
+ * 
+ */
 public class DynamicProgramming extends Thread {
 
+	/**
+	 * The QoS attributes to be considered.
+	 */
 	private QoSAttribute[] mQoSAttributes;
 
+	/**
+	 * The solution found by the algorithm.
+	 */
 	private int[] mSolution;
 
+	/**
+	 * NOT USED YET.
+	 */
 	private float[] mPartialAccumQoS;
 
+	/**
+	 * Default constructor.
+	 * 
+	 * @param qosAttributes
+	 *            A vector containing the QoS attributes that will be used.
+	 */
 	public DynamicProgramming(QoSAttribute[] qosAttributes) {
 		mQoSAttributes = qosAttributes;
 
@@ -24,6 +43,13 @@ public class DynamicProgramming extends Thread {
 		Arrays.fill(mPartialAccumQoS, 0f);
 	}
 
+	/**
+	 * Adds the given level to the partial solution, considering that all the
+	 * posterior levels are already in it.
+	 * 
+	 * @param level
+	 *            The level to be added to the solution.
+	 */
 	private void addLevelToPartialSolution(int level) {
 		int noConcreteServices = mQoSAttributes[0].getValues()[level].length;
 
@@ -39,31 +65,17 @@ public class DynamicProgramming extends Thread {
 				indexOfOptimalService = j;
 			}
 		}
-		
+
 		mSolution[level] = indexOfOptimalService;
 	}
 
 	@Override
 	public void run() {
 		int noAbstractServices = mQoSAttributes[0].getValues().length;
-		
+
 		for (int i = noAbstractServices - 1; i >= 0; i--) {
 			addLevelToPartialSolution(i);
 		}
-	}
-
-	public void startWithTimeOut(long millisTimeOut) {
-		Timer timer = new Timer();
-		TimerTask task = new TimerTask() {
-
-			@Override
-			public void run() {
-				DynamicProgramming.this.interrupt();
-			}
-		};
-
-		timer.schedule(task, millisTimeOut);
-		start();
 	}
 
 	/**
@@ -81,11 +93,11 @@ public class DynamicProgramming extends Thread {
 				QoSAttribute.AGGREGATE_BY_AVERAGE, 0.5f);
 
 		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
-		
+
 		DynamicProgramming dynProg = new DynamicProgramming(attrs);
-		
+
 		dynProg.run();
-		
+
 		System.out.println(Arrays.toString(dynProg.mSolution));
 	}
 
