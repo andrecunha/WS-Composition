@@ -32,10 +32,11 @@ public class QoSAttributeTest {
 
 	/* Ilegal compositions in getAggregatedQoS. */
 
-	@Test(expected = IllegalArgumentException.class)
 	public void test0() {
 		int[] composition = { -1, 0, 0 };
-		attrSum.getAggregatedQoS(composition);
+		assertEquals(attrSum.getAggregatedQoS(composition), 1.5, 0);
+		assertEquals(attrProd.getAggregatedQoS(composition), 0.5, 0);
+		assertEquals(attrAvg.getAggregatedQoS(composition), 0.75, 0);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -103,15 +104,11 @@ public class QoSAttributeTest {
 
 	/* Tests for calculateAggregatedQoS. */
 
-	/* Illegal composition. */
-
-	@Test(expected = IllegalArgumentException.class)
 	public void test10() {
 		int[] composition = { -1, 0, 0 };
-		QoSAttribute.calculateAggregatedQoS(attrs, composition);
+		assertEquals(QoSAttribute.calculateAggregatedQoS(attrs, composition),
+				0.825, 0);
 	}
-
-	/* Legal composition. */
 
 	@Test
 	public void test11() {

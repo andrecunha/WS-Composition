@@ -105,7 +105,7 @@ public class QoSAttribute {
 					mValues.length, composition.length));
 		}
 		for (int i = 0; i < composition.length; i++) {
-			if ((composition[i] < 0) || (composition[i] >= mValues[i].length)) {
+			if (composition[i] >= mValues[i].length) {
 				throw new IllegalArgumentException(String.format(
 						"Composition[%d] is invalid: ", i, composition[i]));
 			}
@@ -115,21 +115,29 @@ public class QoSAttribute {
 		case AGGREGATE_BY_SUM:
 			aggregatedQoS = 0f;
 			for (int i = 0; i < composition.length; i++) {
-				aggregatedQoS += mValues[i][composition[i]];
+				if (composition[i] >= 0) {
+					aggregatedQoS += mValues[i][composition[i]];
+				}
 			}
 			break;
 		case AGGREGATE_BY_PRODUCT:
 			aggregatedQoS = 1f;
 			for (int i = 0; i < composition.length; i++) {
-				aggregatedQoS *= mValues[i][composition[i]];
+				if (composition[i] >= 0) {
+					aggregatedQoS *= mValues[i][composition[i]];
+				}
 			}
 			break;
 		case AGGREGATE_BY_AVERAGE:
 			aggregatedQoS = 0f;
+			int count = 0;
 			for (int i = 0; i < composition.length; i++) {
-				aggregatedQoS += mValues[i][composition[i]];
+				if (composition[i] >= 0) {
+					aggregatedQoS += mValues[i][composition[i]];
+					count++;
+				}
 			}
-			aggregatedQoS /= composition.length;
+			aggregatedQoS =  (count != 0) ? (aggregatedQoS / count) : 0;
 			break;
 		default:
 			aggregatedQoS = -1;
