@@ -111,6 +111,7 @@ public class QoSAttribute {
 			}
 		}
 
+		int count = 0;
 		switch (mAggregationMethod) {
 		case AGGREGATE_BY_SUM:
 			aggregatedQoS = 0f;
@@ -125,12 +126,15 @@ public class QoSAttribute {
 			for (int i = 0; i < composition.length; i++) {
 				if (composition[i] >= 0) {
 					aggregatedQoS *= mValues[i][composition[i]];
+					count++;
 				}
+			}
+			if (count == 0) {
+				aggregatedQoS = 0;
 			}
 			break;
 		case AGGREGATE_BY_AVERAGE:
 			aggregatedQoS = 0f;
-			int count = 0;
 			for (int i = 0; i < composition.length; i++) {
 				if (composition[i] >= 0) {
 					aggregatedQoS += mValues[i][composition[i]];

@@ -122,8 +122,15 @@ public class ACO extends Thread {
 				mAnts[i].walk();
 			}
 			updatePheromone();
-			updateCurrentSolution();
+			
+			if (!(mMaxIterations < 0 && mMinAggregatedQoS < 0)) {
+				updateCurrentSolution();
+			}
 			mIterations++;
+		}
+		
+		if (mMaxIterations < 0 && mMinAggregatedQoS < 0) {
+			updateCurrentSolution();
 		}
 	}
 
