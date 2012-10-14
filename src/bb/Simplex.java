@@ -118,8 +118,60 @@ public class Simplex {
 		mIsNormalized = true;
 	}
 
+	//TODO: Fix the problems with the indexes.
 	private void pivot(int leaving, int entering) {
+		/* Compute the coefficients of the equation for new variable xe. */
+		mb[entering - 1] = mb[leaving - 1] / mA[leaving - 1][entering - 1];
+		for (int j : mN) {
+			if (j != entering) {
+				mA[entering - 1][j - 1] = mA[leaving - 1][j]
+						/ mA[leaving - 1][entering - 1];
+			}
+		}
+		mA[entering - 1][leaving - 1] = 1.0 / mA[leaving - 1][entering - 1];
 
+		/* Compute the coefficients of the remaining constraints. */
+		for (int i : mB) {
+			if (i != leaving) {
+				mb[i - 1] -= mA[i - 1][entering - 1] * mb[entering - 1];
+				for (int j : mN) {
+					if (j != entering) {
+						mA[i - 1][j - 1] -= mA[i - 1][entering - 1]
+								* mA[entering - 1][j - 1];
+					}
+				}
+				mA[i - 1][leaving - 1] = -mA[i - 1][entering - 1]
+						* mA[entering - 1][leaving - 1];
+			}
+		}
+		
+		/* Compute the objective function. */
+		mv += mc[entering - 1] * mb[entering - 1];
+		for (int j : mN) {
+			if (j != entering) {
+				mc[j] -= mc[entering - 1] * mA[entering - 1][j - 1];
+			}
+		}
+		mc[leaving - 1] = -mc[entering - 1] * -mA[entering - 1][leaving - 1];
+		
+		/* Compute the new set of basic and nonbasic variables. */
+		int[] newN = new int[mN.length - 2];
+		int j = 0;
+		for (int i : mN) {
+			if (i != entering && i != leaving) {
+				newN[j++] = i;
+			}
+		}
+		mN = newN;
+		
+		int[] newB = new int[mN.length - 2];
+		j = 0;
+		for (int i : mB) {
+			if (i != entering && i != leaving) {
+				newB[j++] = i;
+			}
+		}
+		mB = newB;
 	}
 
 	public void solve() {
@@ -134,7 +186,7 @@ public class Simplex {
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		
+
 		if (mIsNormalized) {
 			b.append("z\t=\t" + String.format("%+g", mv));
 			for (int j = 0; j < mc.length; j++) {
@@ -162,9 +214,8 @@ public class Simplex {
 			for (Constraint constraint : mConstraints) {
 				b.append("\t");
 				for (int j = 0; j < constraint.a.length; j++) {
-					b.append("\t"
-							+ String.format("%+g", constraint.a[j]) + " x"
-							+ (j + 1));
+					b.append("\t" + String.format("%+g", constraint.a[j])
+							+ " x" + (j + 1));
 				}
 				b.append("\t");
 				switch (constraint.rel) {
@@ -203,6 +254,9 @@ public class Simplex {
 
 		s.normalize();
 
+		System.out.println(s);
+		
+		s.pivot(6, 1);
 		System.out.println(s);
 	}
 
