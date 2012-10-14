@@ -157,10 +157,10 @@ public class Simplex {
 		mv += mc[entering - 1] * mb[entering - 1];
 		for (int j : mN) {
 			if (j != entering) {
-				mc[j] -= mc[entering - 1] * mA[entering - 1][j - 1];
+				mc[j - 1] -= (mc[entering - 1] * mA[entering - 1][j - 1]);
 			}
 		}
-		mc[leaving - 1] = -mc[entering - 1] * -mA[entering - 1][leaving - 1];
+		mc[leaving - 1] = -mc[entering - 1] * mA[entering - 1][leaving - 1];
 
 		/* Compute the new set of basic and nonbasic variables. */
 		for (int i = 0; i < mN.length; i++) {
@@ -192,6 +192,9 @@ public class Simplex {
 		StringBuilder b = new StringBuilder();
 
 		if (mIsNormalized) {
+			Arrays.sort(mB);
+			Arrays.sort(mN);
+			
 			b.append("z\t=\t" + String.format("%+6.3g", mv));
 			for (int j : mN) {
 				b.append("\t" + String.format("%+6.3g", mc[j - 1]) + " x" + j);
@@ -261,6 +264,12 @@ public class Simplex {
 		System.out.println(s);
 
 		s.pivot(6, 1);
+		System.out.println(s);
+		
+		s.pivot(5, 3);
+		System.out.println(s);
+		
+		s.pivot(3, 2);
 		System.out.println(s);
 	}
 
