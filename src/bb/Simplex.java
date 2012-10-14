@@ -90,24 +90,33 @@ public class Simplex {
 			mB[i - 1] = mN.length + i;
 		}
 
+		/*
+		 * We must alloc space for the new coefficients in the objective
+		 * function.
+		 */
+		double[] newC = new double[mc.length + mB.length];
+		System.arraycopy(mc, 0, newC, 0, mc.length);
+		mc = newC;
+
 		/* All the constraints must be equalities. */
-		mA = new double[mConstraints.size()][mConstraints.get(0).a.length];
-		mb = new double[mConstraints.size()];
+		mA = new double[mConstraints.size() + mB.length][mConstraints.get(0).a.length
+				+ mB.length];
+		mb = new double[mConstraints.size() + mB.length];
 
 		for (int i = 0; i < mConstraints.size(); i++) {
 			switch (mConstraints.get(i).rel) {
 			case EQUALS:
 				throw new NotImplementedException();
 			case GTE:
-				mb[i] = -mConstraints.get(i).b;
+				mb[mB[i] - 1] = -mConstraints.get(i).b;
 				for (int j = 0; j < mConstraints.get(i).a.length; j++) {
-					mA[i][j] = -mConstraints.get(i).a[j];
+					mA[mB[i] - 1][j] = -mConstraints.get(i).a[j];
 				}
 				break;
 			case LTE:
-				mb[i] = mConstraints.get(i).b;
+				mb[mB[i] - 1] = mConstraints.get(i).b;
 				for (int j = 0; j < mConstraints.get(i).a.length; j++) {
-					mA[i][j] = mConstraints.get(i).a[j];
+					mA[mB[i] - 1][j] = mConstraints.get(i).a[j];
 				}
 				break;
 			default:
@@ -118,13 +127,12 @@ public class Simplex {
 		mIsNormalized = true;
 	}
 
-	//TODO: Fix the problems with the indexes.
 	private void pivot(int leaving, int entering) {
 		/* Compute the coefficients of the equation for new variable xe. */
 		mb[entering - 1] = mb[leaving - 1] / mA[leaving - 1][entering - 1];
 		for (int j : mN) {
 			if (j != entering) {
-				mA[entering - 1][j - 1] = mA[leaving - 1][j]
+				mA[entering - 1][j - 1] = mA[leaving - 1][j - 1]
 						/ mA[leaving - 1][entering - 1];
 			}
 		}
@@ -144,7 +152,7 @@ public class Simplex {
 						* mA[entering - 1][leaving - 1];
 			}
 		}
-		
+
 		/* Compute the objective function. */
 		mv += mc[entering - 1] * mb[entering - 1];
 		for (int j : mN) {
@@ -153,25 +161,21 @@ public class Simplex {
 			}
 		}
 		mc[leaving - 1] = -mc[entering - 1] * -mA[entering - 1][leaving - 1];
-		
+
 		/* Compute the new set of basic and nonbasic variables. */
-		int[] newN = new int[mN.length - 2];
-		int j = 0;
-		for (int i : mN) {
-			if (i != entering && i != leaving) {
-				newN[j++] = i;
+		for (int i = 0; i < mN.length; i++) {
+			if (mN[i] == entering) {
+				mN[i] = leaving;
+				break;
 			}
 		}
-		mN = newN;
 		
-		int[] newB = new int[mN.length - 2];
-		j = 0;
-		for (int i : mB) {
-			if (i != entering && i != leaving) {
-				newB[j++] = i;
+		for (int i = 0; i < mB.length; i++) {
+			if (mB[i] == leaving) {
+				mB[i] = entering;
+				break;
 			}
 		}
-		mB = newB;
 	}
 
 	public void solve() {
@@ -188,33 +192,33 @@ public class Simplex {
 		StringBuilder b = new StringBuilder();
 
 		if (mIsNormalized) {
-			b.append("z\t=\t" + String.format("%+g", mv));
-			for (int j = 0; j < mc.length; j++) {
-				b.append("\t" + String.format("%+g", mc[j]) + " x" + (j + 1));
+			b.append("z\t=\t" + String.format("%+6.3g", mv));
+			for (int j : mN) {
+				b.append("\t" + String.format("%+6.3g", mc[j - 1]) + " x" + j);
 			}
 			b.append("\n");
 
-			for (int i = 0; i < mB.length; i++) {
-				b.append("x" + mB[i] + "\t=\t" + String.format("%+g", mb[i]));
-				for (int j = 0; j < mA[i].length; j++) {
-					b.append("\t" + String.format("%+g", -mA[i][j]) + " x"
-							+ mN[j]);
+			for (int i : mB) {
+				b.append("x" + i + "\t=\t"
+						+ String.format("%+6.3g", mb[i - 1]));
+				for (int j : mN) {
+					b.append("\t" + String.format("%+6.3g", -mA[i - 1][j - 1])
+							+ " x" + j);
 				}
 				b.append("\n");
 			}
-
 		} else {
 			b.append(mObjective == MINIMIZE ? "Minimize:\n\t" : "Maximize:\n\n");
-			b.append("z = " + String.format("%+g", mv));
+			b.append("z = " + String.format("%+6.3g", mv));
 			for (int j = 0; j < mc.length; j++) {
-				b.append("\t" + String.format("%+g", mc[j]) + " x" + (j + 1));
+				b.append("\t" + String.format("%+6.3g", mc[j]) + " x" + (j + 1));
 			}
 
 			b.append("\n\nSubject to:\n");
 			for (Constraint constraint : mConstraints) {
 				b.append("\t");
 				for (int j = 0; j < constraint.a.length; j++) {
-					b.append("\t" + String.format("%+g", constraint.a[j])
+					b.append("\t" + String.format("%+6.3g", constraint.a[j])
 							+ " x" + (j + 1));
 				}
 				b.append("\t");
@@ -231,7 +235,7 @@ public class Simplex {
 				default:
 					break;
 				}
-				b.append(constraint.b + "\n");
+				b.append(String.format("%+6.3g", constraint.b) + "\n");
 			}
 		}
 
@@ -255,7 +259,7 @@ public class Simplex {
 		s.normalize();
 
 		System.out.println(s);
-		
+
 		s.pivot(6, 1);
 		System.out.println(s);
 	}
