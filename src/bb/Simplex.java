@@ -28,7 +28,6 @@ public class Simplex {
 
 	public Simplex() {
 		mConstraints = new ArrayList<Constraint>();
-		mIsNormalized = false;
 	}
 
 	/**
@@ -50,9 +49,9 @@ public class Simplex {
 	/**
 	 * Sets the objective function to:
 	 * 
-	 * f(x_0, x_1, ..., x_{n-1}) = objectiveFunction[0] +
-	 * objectiveFunction[1]*x[0] + objectiveFunction[2]*x[1] + ... +
-	 * objectiveFunction[n]*x[n-1]
+	 * f(x_1, x_2, ..., x_n) = objectiveFunction[0] +
+	 * objectiveFunction[1]*x[1] + objectiveFunction[2]*x[2] + ... +
+	 * objectiveFunction[n]*x[n]
 	 * 
 	 * @param objective
 	 *            Function The objective function coefficients.
@@ -178,8 +177,47 @@ public class Simplex {
 		}
 	}
 
-	public void solve() {
-
+	private void initializeSimplex() {
+		
+	}
+	
+	private int findEnteringVariable() {
+		for (int i : mN) {
+			if (mc[i - 1] > 0) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	public boolean solve() {
+		int e;
+		int l = -1;
+		double[] delta = new double[mB.length + mN.length];
+		double minDelta = Double.MAX_VALUE;
+		
+		while((e = findEnteringVariable()) > 0) {
+			for (int i : mB) {
+				if (mA[i - 1][e - 1] > 0) {
+					delta[i - 1] = mb[i - 1] / mA[i - 1][e - 1];
+				} else {
+					delta[i - 1] = Double.NaN;
+				}
+				
+				if (delta[i - 1] < minDelta) {
+					minDelta = delta[i - 1];
+					l = i;
+				}
+			}
+			
+			if (delta[l - 1] == Double.NaN) {
+				// Problem is unbounded.
+				return false;
+			} else {
+				pivot(l, e);
+			}
+		}
+		return true;
 	}
 
 	public int[] getSolution() {
@@ -261,6 +299,12 @@ public class Simplex {
 
 		s.normalize();
 
+		s.solve();
+		
+		System.out.println(Arrays.toString(s.mB));
+		System.out.println(Arrays.toString(s.mN));
+		
+		/*
 		System.out.println(s);
 
 		s.pivot(6, 1);
@@ -271,6 +315,7 @@ public class Simplex {
 		
 		s.pivot(3, 2);
 		System.out.println(s);
+		*/
 	}
 
 }
