@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 public class Simplex {
 
 	public static final int EQUALS = 0x00;
@@ -26,9 +24,42 @@ public class Simplex {
 	private int mObjective;
 
 	private boolean mIsNormalized;
+	private boolean mIsFeasible;
+	private boolean mIsBounded;
 
 	public Simplex() {
 		mConstraints = new ArrayList<Constraint>();
+	}
+
+	/**
+	 * Copy constructor.
+	 * 
+	 * @param s
+	 */
+	public Simplex(Simplex s) {
+		mA = new double[s.mA.length][];
+		for (int i = 0; i < mA.length; i++) {
+			mA[i] = Arrays.copyOf(s.mA[i], s.mA[i].length);
+		}
+
+		mb = Arrays.copyOf(s.mb, s.mb.length);
+		mc = Arrays.copyOf(s.mc, s.mc.length);
+		mv = s.mv;
+
+		if (s.mB != null) {
+			mB = Arrays.copyOf(s.mB, s.mB.length);
+		}
+
+		if (s.mN != null) {
+			mN = Arrays.copyOf(s.mN, s.mN.length);
+		}
+
+		mConstraints = new ArrayList<Constraint>(s.mConstraints);
+		mObjective = s.mObjective;
+
+		mIsNormalized = s.mIsNormalized;
+		mIsFeasible = s.mIsFeasible;
+		mIsBounded = s.mIsBounded;
 	}
 
 	/**
@@ -65,6 +96,10 @@ public class Simplex {
 		mIsNormalized &= (objective == MAXIMIZE);
 	}
 
+	private int getOriginalNoVariables() {
+		return mConstraints.get(0).a.length;
+	}
+	
 	/**
 	 * Puts the current linear problem in the standard form.
 	 */
@@ -109,10 +144,10 @@ public class Simplex {
 	}
 
 	/**
-	 * Puts the current linear problem in the slack form.
+	 * Puts the current linear program, given in standard form, in the "obvious"
+	 * slack form.
 	 */
 	private void toSlackForm() {
-
 		/* We must set the basic and non-basic index sets. */
 		mN = new int[mConstraints.get(0).a.length];
 		for (int i = 1; i <= mN.length; i++) {
@@ -125,7 +160,7 @@ public class Simplex {
 		}
 
 		/*
-		 * We must alloc space for the new coefficients in the objective
+		 * We must allocate space for the new coefficients in the objective
 		 * function.
 		 */
 		double[] newC = new double[mc.length + mB.length];
@@ -138,24 +173,21 @@ public class Simplex {
 		mb = new double[mConstraints.size() + mB.length];
 
 		for (int i = 0; i < mConstraints.size(); i++) {
-			switch (mConstraints.get(i).rel) {
-			case EQUALS:
-				throw new NotImplementedException();
-			case GTE:
-				mb[mB[i] - 1] = -mConstraints.get(i).b;
-				for (int j = 0; j < mConstraints.get(i).a.length; j++) {
-					mA[mB[i] - 1][j] = -mConstraints.get(i).a[j];
-				}
-				break;
-			case LTE:
-				mb[mB[i] - 1] = mConstraints.get(i).b;
-				for (int j = 0; j < mConstraints.get(i).a.length; j++) {
-					mA[mB[i] - 1][j] = mConstraints.get(i).a[j];
-				}
-				break;
-			default:
-				break;
+			mb[mB[i] - 1] = mConstraints.get(i).b;
+			for (int j = 0; j < mConstraints.get(i).a.length; j++) {
+				mA[mB[i] - 1][j] = mConstraints.get(i).a[j];
 			}
+
+			/*
+			 * switch (mConstraints.get(i).rel) { case EQUALS: throw new
+			 * NotImplementedException(); case GTE: mb[mB[i] - 1] =
+			 * -mConstraints.get(i).b; for (int j = 0; j <
+			 * mConstraints.get(i).a.length; j++) { mA[mB[i] - 1][j] =
+			 * -mConstraints.get(i).a[j]; } break; case LTE: mb[mB[i] - 1] =
+			 * mConstraints.get(i).b; for (int j = 0; j <
+			 * mConstraints.get(i).a.length; j++) { mA[mB[i] - 1][j] =
+			 * mConstraints.get(i).a[j]; } break; default: break; }
+			 */
 		}
 
 		mIsNormalized = true;
@@ -213,7 +245,59 @@ public class Simplex {
 	}
 
 	private void initializeSimplex() {
+		toStandardForm();
 
+		int k = -1;
+		double minB = Integer.MAX_VALUE;
+
+		// k will be the index of the minimum b_i.
+		for (int i = 0; i < mb.length; i++) {
+			if (mb[i] < minB) {
+				k = i;
+				minB = mb[i];
+			}
+		}
+
+		if (mb[k] >= 0) {
+			// The initial basic solution is feasible.
+			toSlackForm();
+			mIsFeasible = true;
+			mIsBounded = true;
+			return;
+		}
+
+		/*
+		 * If the initial basic solution is infeasible, we must create and solve
+		 * the auxiliary linear program.
+		 */
+		Simplex lAux = new Simplex(this);
+		
+		for (Constraint c : lAux.mConstraints) {
+			// Adding -x0 to the end of each constraint.
+			double[] newConstraint = new double[c.a.length + 1];
+			System.arraycopy(c.a, 0, newConstraint, 0, c.a.length);
+			newConstraint[newConstraint.length - 1] = -1;
+			c.a = newConstraint;
+		}
+		
+		// New objective function is -x0.
+		double[] newC = new double[lAux.mc.length + 1];
+		newC[newC.length - 1] = -1;
+		lAux.mc = newC;
+		lAux.mv = 0;
+		
+		int n = lAux.getOriginalNoVariables();
+		lAux.toSlackForm();
+		
+		//TODO: Check this. It's likely to have problems.
+		int l = n + k;
+		lAux.pivot(l, n);
+		////////////////////////////////////////////////
+		
+		// The basic solution of lAux is now feasible.
+		lAux.doMainSimplexLoop();
+		
+		//TODO: Finish this.
 	}
 
 	private int findEnteringVariable() {
@@ -225,7 +309,7 @@ public class Simplex {
 		return -1;
 	}
 
-	public boolean solve() {
+	private boolean doMainSimplexLoop() {
 		int e;
 		int l = -1;
 		double[] delta = new double[mB.length + mN.length];
@@ -253,6 +337,15 @@ public class Simplex {
 			}
 		}
 		return true;
+	}
+	
+	public boolean solve() {
+		initializeSimplex();
+		if (!mIsFeasible || !mIsBounded) {
+			return false;
+		}
+
+		return doMainSimplexLoop();
 	}
 
 	public int[] getSolution() {
