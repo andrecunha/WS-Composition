@@ -27,17 +27,17 @@ public class ACO extends Thread {
 	/**
 	 * The total QoS of each concrete service.
 	 */
-	private float[][] mTotalQoS;
+	private double[][] mTotalQoS;
 
 	/**
 	 * The amount of pheromone associated with each concrete service.
 	 */
-	private float[][] mPheromone;
+	private double[][] mPheromone;
 
 	/**
 	 * The evaporation coefficient of the pheromone.
 	 */
-	private float mRho;
+	private double mRho;
 
 	/**
 	 * The maximum number of iterations. On each iteration, all the ants move
@@ -48,7 +48,7 @@ public class ACO extends Thread {
 	/**
 	 * The minimum acceptable aggregated QoS of a solution.
 	 */
-	private float mMinAggregatedQoS;
+	private double mMinAggregatedQoS;
 
 	/**
 	 * The number of iterations already performed.
@@ -63,7 +63,7 @@ public class ACO extends Thread {
 	/**
 	 * The aggregated QoS of the current solution.
 	 */
-	private float mCurrentAggregatedQoS;
+	private double mCurrentAggregatedQoS;
 
 	/**
 	 * Creates an ACO instance.
@@ -87,14 +87,14 @@ public class ACO extends Thread {
 	 * @param minQoS
 	 *            The minimum acceptable QoS.
 	 */
-	public ACO(int noAnts, QoSAttribute[] qosAttributes, float alpha,
-			float beta, float rho, float initialPheromone, int maxIterations,
-			float minQoS) {
+	public ACO(int noAnts, QoSAttribute[] qosAttributes, double alpha,
+			double beta, double rho, double initialPheromone, int maxIterations,
+			double minQoS) {
 		mQoSAttributes = qosAttributes;
 		
-		mPheromone = new float[qosAttributes[0].getValues().length][];
+		mPheromone = new double[qosAttributes[0].getValues().length][];
 		for (int i = 0; i < mPheromone.length; i++) {
-			mPheromone[i] = new float[qosAttributes[0].getValues()[i].length];
+			mPheromone[i] = new double[qosAttributes[0].getValues()[i].length];
 			Arrays.fill(mPheromone[i], initialPheromone);
 		}
 
@@ -195,7 +195,7 @@ public class ACO extends Thread {
 		}
 
 		for (Ant a : mAnts) {
-			float newPheromone = a.getNewPheromone();
+			double newPheromone = a.getNewPheromone();
 			int[] solution = a.getSolution();
 
 			if (solution == null) {
@@ -214,7 +214,7 @@ public class ACO extends Thread {
 	private void updateCurrentSolution() {
 		for (int i = 0; i < mPheromone.length; i++) {
 			int indexOfMaxPheromone = 0;
-			float maxPheromone = 0;
+			double maxPheromone = 0;
 			for (int j = 0; j < mPheromone[i].length; j++) {
 				if (mPheromone[i][j] > maxPheromone) {
 					maxPheromone = mPheromone[i][j];
@@ -245,7 +245,7 @@ public class ACO extends Thread {
 	}
 
 	public static void main(String[] args) {
-		float[][] values = { { 1, 0.5f, 1, 0.2f, 0.3f },
+		double[][] values = { { 1, 0.5f, 1, 0.2f, 0.3f },
 				{ 1, 0.5f, 0.2f, 0.3f }, { 0.5f, 0.5f, 1, 0.2f, 0.3f } };
 
 		QoSAttribute attrSum = new QoSAttribute(values,
@@ -257,9 +257,9 @@ public class ACO extends Thread {
 
 		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
 
-		float alpha = 1;
-		float beta = 1;
-		float rho = 0.1f;
+		double alpha = 1;
+		double beta = 1;
+		double rho = 0.1f;
 
 		ACO aco = new ACO(5, attrs, alpha, beta, rho, 1, 20, 1.0f);
 		aco.start();

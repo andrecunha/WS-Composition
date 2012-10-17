@@ -23,7 +23,7 @@ public class Ant {
 	/**
 	 * The total QoS of each service, used by the ant as a heuristic.
 	 */
-	private float[][] mTotalQoSValues;
+	private double[][] mTotalQoSValues;
 
 	/**
 	 * The index of the last virtual service to which a concrete service has
@@ -50,17 +50,17 @@ public class Ant {
 	/**
 	 * The pheromone value associated with each concrete service.
 	 */
-	private float[][] mPheromone;
+	private double[][] mPheromone;
 
 	/**
 	 * The relative importance of the amount of pheromone.
 	 */
-	private float mAlpha;
+	private double mAlpha;
 
 	/**
 	 * The relative importance of the heuristic information (the total QoS).
 	 */
-	private float mBeta;
+	private double mBeta;
 
 	/**
 	 * Represents that the ant is in the nest. It's value is -1.
@@ -88,8 +88,8 @@ public class Ant {
 	 *            The relative importance of the heuristic information (the
 	 *            total QoS).
 	 */
-	public Ant(QoSAttribute[] qosValues, float[][] totalQoSValues,
-			float[][] pheromone, float alpha, float beta) {
+	public Ant(QoSAttribute[] qosValues, double[][] totalQoSValues,
+			double[][] pheromone, double alpha, double beta) {
 		int numberOfAbstractServices = qosValues[0].getValues().length;
 
 		nestPosition = -1;
@@ -128,12 +128,12 @@ public class Ant {
 			return;
 		}
 
-		float[] probabilities = new float[mTotalQoSValues[mCurrentPosition].length];
-		float sum = 0f;
+		double[] probabilities = new double[mTotalQoSValues[mCurrentPosition].length];
+		double sum = 0f;
 		for (int j = 0; j < probabilities.length; j++) {
-			probabilities[j] = ((float) Math.pow(
+			probabilities[j] = ((double) Math.pow(
 					mPheromone[mCurrentPosition][j], mAlpha))
-					* ((float) Math.pow(mTotalQoSValues[mCurrentPosition][j],
+					* ((double) Math.pow(mTotalQoSValues[mCurrentPosition][j],
 							mBeta));
 			sum += probabilities[j];
 		}
@@ -150,7 +150,7 @@ public class Ant {
 	 * @return If this ant has just found a solution, returns the pheromone to
 	 *         be laid up all over this solution; otherwise, returns 0.
 	 */
-	public float getNewPheromone() {
+	public double getNewPheromone() {
 		if (mCurrentPosition == sourcePosition
 				|| (mCurrentPosition == nestPosition && mAlreadyFoundACompleteSolution)) {
 			return QoSAttribute.calculateAggregatedQoS(mQoSValues,
@@ -180,11 +180,11 @@ public class Ant {
 	 *            The probabilities of each element
 	 * @return The index of the selected element.
 	 */
-	private static final int selectWithProbabilities(float[] probabilities) {
+	private static final int selectWithProbabilities(double[] probabilities) {
 		int elem = 0;
 
-		float number = (float) Math.random();
-		float sum = probabilities[elem];
+		double number = (double) Math.random();
+		double sum = probabilities[elem];
 		while (number > sum) {
 			sum += probabilities[++elem];
 		}

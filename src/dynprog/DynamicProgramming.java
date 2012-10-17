@@ -25,7 +25,7 @@ public class DynamicProgramming extends Thread {
 	/**
 	 * NOT USED YET.
 	 */
-	private float[] mPartialAccumQoS;
+	private double[] mPartialAccumQoS;
 
 	/**
 	 * Default constructor.
@@ -39,7 +39,7 @@ public class DynamicProgramming extends Thread {
 		mSolution = new int[qosAttributes[0].getValues().length];
 		Arrays.fill(mSolution, -1);
 
-		mPartialAccumQoS = new float[qosAttributes[0].getValues().length];
+		mPartialAccumQoS = new double[qosAttributes[0].getValues().length];
 		Arrays.fill(mPartialAccumQoS, 0f);
 	}
 
@@ -53,12 +53,12 @@ public class DynamicProgramming extends Thread {
 	private void addLevelToPartialSolution(int level) {
 		int noConcreteServices = mQoSAttributes[0].getValues()[level].length;
 
-		float maxAggregatedQoS = Float.MIN_VALUE;
+		double maxAggregatedQoS = Double.MIN_VALUE;
 		int indexOfOptimalService = 0;
 
 		for (int j = 0; j < noConcreteServices; j++) {
 			mSolution[level] = j;
-			float aggregatedQoS = QoSAttribute.calculateAggregatedQoS(
+			double aggregatedQoS = QoSAttribute.calculateAggregatedQoS(
 					mQoSAttributes, mSolution);
 			if (aggregatedQoS > maxAggregatedQoS) {
 				maxAggregatedQoS = aggregatedQoS;
@@ -82,7 +82,7 @@ public class DynamicProgramming extends Thread {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		float[][] values = { { 1, 0.5f, 1, 0.2f, 0.3f },
+		double[][] values = { { 1, 0.5f, 1, 0.2f, 0.3f },
 				{ 1, 0.5f, 0.2f, 0.3f }, { 0.5f, 0.5f, 1, 0.2f, 0.3f } };
 
 		QoSAttribute attrSum = new QoSAttribute(values,

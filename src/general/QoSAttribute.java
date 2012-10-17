@@ -25,7 +25,7 @@ public class QoSAttribute {
 	/**
 	 * The QoS values.
 	 */
-	private float[][] mValues;
+	private double[][] mValues;
 
 	/**
 	 * The function to be used to compute the aggregated QoS. It must be one of
@@ -37,13 +37,13 @@ public class QoSAttribute {
 	/**
 	 * The weight of this attribute.
 	 */
-	private float mWeight;
+	private double mWeight;
 
 	/**
 	 * The maximum possible QoS for the current the aggregation function and the
 	 * current number of virtual services.
 	 */
-	private float mMaximumQoS;
+	private double mMaximumQoS;
 
 	/**
 	 * Creates a QoSAttribute instance.
@@ -55,7 +55,7 @@ public class QoSAttribute {
 	 * @param weight
 	 *            The weight of this attribute.
 	 */
-	public QoSAttribute(float[][] values, int aggregationMethod, float weight) {
+	public QoSAttribute(double[][] values, int aggregationMethod, double weight) {
 
 		/* Check for the validity of the given values. */
 		for (int i = 0; i < values.length; i++) {
@@ -96,8 +96,8 @@ public class QoSAttribute {
 	 *            corresponding to each abstract service.
 	 * @return The aggregated QoS value.
 	 */
-	public float getAggregatedQoS(int[] composition) {
-		float aggregatedQoS;
+	public double getAggregatedQoS(int[] composition) {
+		double aggregatedQoS;
 
 		if (composition.length != mValues.length) {
 			throw new IllegalArgumentException(String.format(
@@ -155,7 +155,7 @@ public class QoSAttribute {
 	 * 
 	 * @return The maximum QoS value.
 	 */
-	public float getMaximumQoS() {
+	public double getMaximumQoS() {
 		return mMaximumQoS;
 	}
 
@@ -163,7 +163,7 @@ public class QoSAttribute {
 	 * 
 	 * @return The weight of this attribute.
 	 */
-	public float getWeight() {
+	public double getWeight() {
 		return mWeight;
 	}
 
@@ -171,7 +171,7 @@ public class QoSAttribute {
 	 * 
 	 * @return The QoS values.
 	 */
-	public float[][] getValues() {
+	public double[][] getValues() {
 		return mValues;
 	}
 
@@ -182,18 +182,18 @@ public class QoSAttribute {
 	 *            A vector containing all the attributes.
 	 * @return A matrix containing the total QoS of each service.
 	 */
-	public static float[][] calculateTotalQoS(QoSAttribute[] qosValues) {
-		float[][] totalQoSValues;
-		totalQoSValues = new float[qosValues[0].getValues().length][];
+	public static double[][] calculateTotalQoS(QoSAttribute[] qosValues) {
+		double[][] totalQoSValues;
+		totalQoSValues = new double[qosValues[0].getValues().length][];
 
 		for (int i = 0; i < totalQoSValues.length; i++) {
-			totalQoSValues[i] = new float[qosValues[0].getValues()[i].length];
+			totalQoSValues[i] = new double[qosValues[0].getValues()[i].length];
 			Arrays.fill(totalQoSValues[i], 0f);
 		}
 
 		for (int attr = 0; attr < qosValues.length; attr++) {
 			QoSAttribute currentAttribute = qosValues[attr];
-			float[][] currentValues = currentAttribute.getValues();
+			double[][] currentValues = currentAttribute.getValues();
 
 			for (int i = 0; i < currentValues.length; i++) {
 				for (int j = 0; j < currentValues[i].length; j++) {
@@ -217,10 +217,10 @@ public class QoSAttribute {
 	 *            each abstract service.
 	 * @return The aggregated QoS corresponding to the given composition.
 	 */
-	public static float calculateAggregatedQoS(QoSAttribute[] attributes,
+	public static double calculateAggregatedQoS(QoSAttribute[] attributes,
 			int[] composition) {
-		float currentQoSValue = 0f;
-		float maximumQoSValue = 0f;
+		double currentQoSValue = 0;
+		double maximumQoSValue = 0;
 
 		for (int i = 0; i < attributes.length; i++) {
 			currentQoSValue += attributes[i].getAggregatedQoS(composition)

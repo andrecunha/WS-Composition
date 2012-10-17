@@ -8,11 +8,11 @@ import org.junit.Test;
 
 public class QoSAttributeTest {
 
-	public static final float[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f },
+	public static final double[][] values = { { 1, 0.5f, 1 }, { 1, 0.5f },
 			{ 0.5f, 0.5f, 1 } };
-	public static final float[][] invalidValues1 = { { 1.1f, 0.5f, 1 },
+	public static final double[][] invalidValues1 = { { 1.1f, 0.5f, 1 },
 			{ 1, 0.5f }, { 0.5f, 0.5f, 1 } };
-	public static final float[][] invalidValues2 = { { -1, 0.5f, 1 },
+	public static final double[][] invalidValues2 = { { -1, 0.5f, 1 },
 			{ 1, 0.5f }, { 0.5f, 0.5f, 1 } };
 
 	public static QoSAttribute attrSum;
@@ -121,10 +121,10 @@ public class QoSAttributeTest {
 
 	@Test()
 	public void test12() {
-		float[][] _values1 = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
-		float[][] _values2 = { { 0.5f, 0.75f, 1 }, { 1, 0.5f },
+		double[][] _values1 = { { 1, 0.5f, 1 }, { 1, 0.5f }, { 0.5f, 0.5f, 1 } };
+		double[][] _values2 = { { 0.5f, 0.75f, 1 }, { 1, 0.5f },
 				{ 0.5f, 0.5f, 1 } };
-		float[][] _values3 = { { 0.5f, 0.5f, 0.8f }, { 1, 0.5f },
+		double[][] _values3 = { { 0.5f, 0.5f, 0.8f }, { 1, 0.5f },
 				{ 0.5f, 0.5f, 1 } };
 
 		QoSAttribute _attrSum = new QoSAttribute(_values1,
@@ -136,10 +136,10 @@ public class QoSAttributeTest {
 		QoSAttribute[] _attrs = new QoSAttribute[] { _attrSum, _attrProd,
 				_attrAvg };
 
-		float[][] totalQoS = QoSAttribute.calculateTotalQoS(_attrs);
-		assertArrayEquals(totalQoS[0], new float[] { 0.6f, 0.575f, 0.9f },
+		double[][] totalQoS = QoSAttribute.calculateTotalQoS(_attrs);
+		assertArrayEquals(totalQoS[0], new double[] { 0.6f, 0.575f, 0.9f },
 				0.001f);
-		assertArrayEquals(totalQoS[1], new float[] { 1.0f, 0.5f }, 0.001f);
-		assertArrayEquals(totalQoS[2], new float[] { 0.5f, 0.5f, 1.0f }, 0.001f);
+		assertArrayEquals(totalQoS[1], new double[] { 1.0f, 0.5f }, 0.001f);
+		assertArrayEquals(totalQoS[2], new double[] { 0.5f, 0.5f, 1.0f }, 0.001f);
 	}
 }
