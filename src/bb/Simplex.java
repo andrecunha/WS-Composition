@@ -2,6 +2,7 @@ package bb;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -66,9 +67,9 @@ public class Simplex {
 	}
 
 	/**
-	 * Puts the current linear problem in the slack form.
+	 * Puts the current linear problem in the standard form.
 	 */
-	private void normalize() {
+	private void toStandardForm() {
 		/* This must be a maximization problem. */
 		if (mObjective == MINIMIZE) {
 			for (int i = 0; i < mc.length; i++) {
@@ -77,6 +78,38 @@ public class Simplex {
 			mv = -mv;
 			mObjective = MAXIMIZE;
 		}
+		
+		ArrayList<Constraint> newConstraints = new ArrayList<Constraint>();
+		Iterator<Constraint> it = mConstraints.iterator();
+		
+		while (it.hasNext()) {
+			Constraint c = it.next();
+			switch (c.rel) {
+			case EQUALS:
+				newConstraints.add(new Constraint(c.a, LTE, c.b));
+				newConstraints.add(new Constraint(c.a, GTE, c.b));
+				it.remove();
+				break;
+			case GTE:
+				double[] newA = Arrays.copyOf(c.a, c.a.length);
+				for (int i = 0; i < newA.length; i++) {
+					newA[i] = -newA[i];
+				}
+				newConstraints.add(new Constraint(newA, LTE, -c.b));
+				it.remove();
+				break;
+			default:
+				break;
+			}
+		}
+		
+		mConstraints.addAll(newConstraints);
+	}
+	
+	/**
+	 * Puts the current linear problem in the slack form.
+	 */
+	private void toSlackForm() {
 
 		/* We must set the basic and non-basic index sets. */
 		mN = new int[mConstraints.get(0).a.length];
@@ -297,7 +330,8 @@ public class Simplex {
 
 		System.out.println(s);
 
-		s.normalize();
+		s.toStandardForm();
+		s.toSlackForm();
 
 		s.solve();
 		
