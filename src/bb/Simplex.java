@@ -50,9 +50,8 @@ public class Simplex {
 	/**
 	 * Sets the objective function to:
 	 * 
-	 * f(x_1, x_2, ..., x_n) = objectiveFunction[0] +
-	 * objectiveFunction[1]*x[1] + objectiveFunction[2]*x[2] + ... +
-	 * objectiveFunction[n]*x[n]
+	 * f(x_1, x_2, ..., x_n) = objectiveFunction[0] + objectiveFunction[1]*x[1]
+	 * + objectiveFunction[2]*x[2] + ... + objectiveFunction[n]*x[n]
 	 * 
 	 * @param objective
 	 *            Function The objective function coefficients.
@@ -78,34 +77,37 @@ public class Simplex {
 			mv = -mv;
 			mObjective = MAXIMIZE;
 		}
-		
+
+		/* Removing equality constraints. */
 		ArrayList<Constraint> newConstraints = new ArrayList<Constraint>();
 		Iterator<Constraint> it = mConstraints.iterator();
-		
 		while (it.hasNext()) {
 			Constraint c = it.next();
-			switch (c.rel) {
-			case EQUALS:
+			if (c.rel == EQUALS) {
 				newConstraints.add(new Constraint(c.a, LTE, c.b));
 				newConstraints.add(new Constraint(c.a, GTE, c.b));
 				it.remove();
-				break;
-			case GTE:
+			}
+		}
+		mConstraints.addAll(newConstraints);
+
+		/* Removing greater-than-or-equal-to constraints. */
+		newConstraints = new ArrayList<Constraint>();
+		it = mConstraints.iterator();
+		while (it.hasNext()) {
+			Constraint c = it.next();
+			if (c.rel == GTE) {
 				double[] newA = Arrays.copyOf(c.a, c.a.length);
 				for (int i = 0; i < newA.length; i++) {
 					newA[i] = -newA[i];
 				}
 				newConstraints.add(new Constraint(newA, LTE, -c.b));
 				it.remove();
-				break;
-			default:
-				break;
 			}
 		}
-		
 		mConstraints.addAll(newConstraints);
 	}
-	
+
 	/**
 	 * Puts the current linear problem in the slack form.
 	 */
@@ -201,7 +203,7 @@ public class Simplex {
 				break;
 			}
 		}
-		
+
 		for (int i = 0; i < mB.length; i++) {
 			if (mB[i] == leaving) {
 				mB[i] = entering;
@@ -211,9 +213,9 @@ public class Simplex {
 	}
 
 	private void initializeSimplex() {
-		
+
 	}
-	
+
 	private int findEnteringVariable() {
 		for (int i : mN) {
 			if (mc[i - 1] > 0) {
@@ -222,27 +224,27 @@ public class Simplex {
 		}
 		return -1;
 	}
-	
+
 	public boolean solve() {
 		int e;
 		int l = -1;
 		double[] delta = new double[mB.length + mN.length];
 		double minDelta = Double.MAX_VALUE;
-		
-		while((e = findEnteringVariable()) > 0) {
+
+		while ((e = findEnteringVariable()) > 0) {
 			for (int i : mB) {
 				if (mA[i - 1][e - 1] > 0) {
 					delta[i - 1] = mb[i - 1] / mA[i - 1][e - 1];
 				} else {
 					delta[i - 1] = Double.NaN;
 				}
-				
+
 				if (delta[i - 1] < minDelta) {
 					minDelta = delta[i - 1];
 					l = i;
 				}
 			}
-			
+
 			if (delta[l - 1] == Double.NaN) {
 				// Problem is unbounded.
 				return false;
@@ -265,7 +267,7 @@ public class Simplex {
 		if (mIsNormalized) {
 			Arrays.sort(mB);
 			Arrays.sort(mN);
-			
+
 			b.append("z\t=\t" + String.format("%+6.3g", mv));
 			for (int j : mN) {
 				b.append("\t" + String.format("%+6.3g", mc[j - 1]) + " x" + j);
@@ -273,8 +275,7 @@ public class Simplex {
 			b.append("\n");
 
 			for (int i : mB) {
-				b.append("x" + i + "\t=\t"
-						+ String.format("%+6.3g", mb[i - 1]));
+				b.append("x" + i + "\t=\t" + String.format("%+6.3g", mb[i - 1]));
 				for (int j : mN) {
 					b.append("\t" + String.format("%+6.3g", -mA[i - 1][j - 1])
 							+ " x" + j);
@@ -334,22 +335,19 @@ public class Simplex {
 		s.toSlackForm();
 
 		s.solve();
-		
+
 		System.out.println(Arrays.toString(s.mB));
 		System.out.println(Arrays.toString(s.mN));
-		
-		/*
-		System.out.println(s);
 
-		s.pivot(6, 1);
-		System.out.println(s);
-		
-		s.pivot(5, 3);
-		System.out.println(s);
-		
-		s.pivot(3, 2);
-		System.out.println(s);
-		*/
+		/*
+		 * System.out.println(s);
+		 * 
+		 * s.pivot(6, 1); System.out.println(s);
+		 * 
+		 * s.pivot(5, 3); System.out.println(s);
+		 * 
+		 * s.pivot(3, 2); System.out.println(s);
+		 */
 	}
 
 }
