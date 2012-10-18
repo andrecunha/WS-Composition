@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
+/**
+ * 
+ * @author Andre Luiz Verucci da Cunha
+ * 
+ */
 public class Simplex {
 
 	public static final int EQUALS = 0x00;
@@ -62,7 +67,12 @@ public class Simplex {
 			mN = Arrays.copyOf(s.mN, s.mN.length);
 		}
 
-		mConstraints = new ArrayList<Constraint>(s.mConstraints);
+		mConstraints = new ArrayList<Constraint>(s.mConstraints.size());
+		for (Constraint c : s.mConstraints) {
+			Constraint c2 = new Constraint(c);
+			mConstraints.add(c2);
+		}
+		
 		mObjective = s.mObjective;
 
 		mIsInSlackForm = s.mIsInSlackForm;
@@ -104,6 +114,10 @@ public class Simplex {
 		mIsInSlackForm &= (objective == MAXIMIZE);
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	private int getOriginalNoVariables() {
 		return mConstraints.get(0).a.length;
 	}
@@ -185,22 +199,16 @@ public class Simplex {
 			for (int j = 0; j < mConstraints.get(i).a.length; j++) {
 				mA[mB[i] - 1][j] = mConstraints.get(i).a[j];
 			}
-
-			/*
-			 * switch (mConstraints.get(i).rel) { case EQUALS: throw new
-			 * NotImplementedException(); case GTE: mb[mB[i] - 1] =
-			 * -mConstraints.get(i).b; for (int j = 0; j <
-			 * mConstraints.get(i).a.length; j++) { mA[mB[i] - 1][j] =
-			 * -mConstraints.get(i).a[j]; } break; case LTE: mb[mB[i] - 1] =
-			 * mConstraints.get(i).b; for (int j = 0; j <
-			 * mConstraints.get(i).a.length; j++) { mA[mB[i] - 1][j] =
-			 * mConstraints.get(i).a[j]; } break; default: break; }
-			 */
 		}
 
 		mIsInSlackForm = true;
 	}
 
+	/**
+	 * 
+	 * @param leaving
+	 * @param entering
+	 */
 	private void pivot(int leaving, int entering) {
 		/* Compute the coefficients of the equation for new variable xe. */
 		mb[entering - 1] = mb[leaving - 1] / mA[leaving - 1][entering - 1];
@@ -252,6 +260,10 @@ public class Simplex {
 		}
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	private int findIndexOfMinimumB() {
 		int k = -1;
 		double minB = Double.MAX_VALUE;
@@ -267,6 +279,9 @@ public class Simplex {
 		return k;
 	}
 
+	/**
+	 * 
+	 */
 	private void initializeSimplex() {
 		toStandardForm();
 
@@ -395,6 +410,8 @@ public class Simplex {
 				}
 			}
 
+			/* We now adjust the basic and non-basic index sets. */
+
 			mB = new int[lAux.mB.length];
 			int r = 0;
 			for (int s : lAux.mB) {
@@ -422,13 +439,13 @@ public class Simplex {
 			mIsFeasible = true;
 			mIsBounded = true;
 			mIsInSlackForm = true;
-
-		} else {
-			/* Original problem is infeasible. */
-			mIsFeasible = false;
 		}
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	private int findEnteringVariable() {
 		for (int i : mN) {
 			if (mc[i - 1] > 0) {
@@ -438,7 +455,11 @@ public class Simplex {
 		return -1;
 	}
 
-	private boolean doMainSimplexLoop() {
+	/**
+	 * 
+	 * @return
+	 */
+	private void doMainSimplexLoop() {
 		int e;
 		int l = -1;
 		double[] delta = new double[mB.length + mN.length];
@@ -461,23 +482,32 @@ public class Simplex {
 			if (delta[l - 1] == Double.NaN) {
 				// Problem is unbounded.
 				mIsBounded = false;
-				return false;
+				return;
 			} else {
 				pivot(l, e);
 			}
 		}
-		return true;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean solve() {
 		initializeSimplex();
 		if (!mIsFeasible || !mIsBounded) {
 			return false;
 		}
 
-		return doMainSimplexLoop();
+		doMainSimplexLoop();
+
+		return mIsBounded;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public double[] getSolution() {
 		int n = getOriginalNoVariables();
 		double[] solution = new double[n];
@@ -561,6 +591,7 @@ public class Simplex {
 
 		s.solve();
 
+		System.out.println(s);
 		System.out.println(Arrays.toString(s.getSolution()));
 
 		s = new Simplex();
@@ -573,7 +604,7 @@ public class Simplex {
 		System.out.println(s);
 
 		s.solve();
-		
+
 		System.out.println(Arrays.toString(s.getSolution()));
 
 	}
