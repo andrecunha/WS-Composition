@@ -313,13 +313,13 @@ public class Simplex {
 		if (solution[solution.length - 1] == 0) {
 			/*
 			 * Original problem is feasible. We must remove x0 and adjust the
-			 * objective function.
+			 * objective function and the constraints.
 			 */
 
 			double[] nc = new double[lAux.mc.length];
 			System.arraycopy(mc, 0, nc, 0, mc.length);
 			mc = nc;
-			
+
 			/*
 			 * First, we find i such that c_i != 0 in the original objective
 			 * function.
@@ -331,32 +331,97 @@ public class Simplex {
 					break;
 				}
 			}
-			
-			/* Then, we compute the new objective function. */
+
+			/* Then, we compute the coefficients of the new objective function. */
 			mv += lAux.mb[i - 1] * mc[i - 1];
-			
+
 			for (int j : lAux.mN) {
 				mc[j - 1] -= mc[i - 1] * lAux.mA[i - 1][j - 1];
 			}
 			mc[i - 1] = 0;
-			
+
+			// Removing "x0".
 			double[] aux = mc;
 			mc = new double[aux.length - 1];
 			for (int q = 1; q <= aux.length; q++) {
 				if (q == lAux.getOriginalNoVariables()) {
 					continue;
 				}
-				
+
 				if (q < lAux.getOriginalNoVariables()) {
 					mc[q - 1] = aux[q - 1];
 				} else {
 					mc[q - 2] = aux[q - 1];
 				}
 			}
-			
-			System.out.println("Para tudo!");
-			
-			/* Now, we remove "x0" from the constraints. */
+
+			/* Now, we adjust the constraints. */
+
+			mb = new double[lAux.mb.length - 1];
+			for (int q = 1; q <= lAux.mb.length; q++) {
+				if (q == lAux.getOriginalNoVariables()) {
+					continue;
+				}
+
+				if (q < lAux.getOriginalNoVariables()) {
+					mb[q - 1] = lAux.mb[q - 1];
+				} else {
+					mb[q - 2] = lAux.mb[q - 1];
+				}
+			}
+
+			mA = new double[lAux.mA.length - 1][lAux.mA[0].length - 1];
+			for (int p = 1; p <= lAux.mA.length; p++) {
+				int index;
+				if (p == lAux.getOriginalNoVariables()) {
+					continue;
+				}
+				if (p < lAux.getOriginalNoVariables()) {
+					index = p - 1;
+				} else {
+					index = p - 2;
+				}
+
+				for (int q = 1; q <= lAux.mA[index].length; q++) {
+					if (q == lAux.getOriginalNoVariables()) {
+						continue;
+					}
+
+					if (q < lAux.getOriginalNoVariables()) {
+						mA[index][q - 1] = lAux.mA[p - 1][q - 1];
+					} else {
+						mA[index][q - 2] = lAux.mA[p - 1][q - 1];
+					}
+				}
+			}
+
+			mB = new int[lAux.mB.length];
+			int r = 0;
+			for (int s : lAux.mB) {
+				if (s < lAux.getOriginalNoVariables()) {
+					mB[r++] = s;
+				} else {
+					mB[r++] = s - 1;
+				}
+			}
+
+			mN = new int[lAux.mN.length - 1];
+
+			r = 0;
+			for (int s : lAux.mN) {
+				if (s == lAux.getOriginalNoVariables()) {
+					continue;
+				}
+				if (s < lAux.getOriginalNoVariables()) {
+					mN[r++] = s;
+				} else {
+					mN[r++] = s - 1;
+				}
+			}
+
+			mIsFeasible = true;
+			mIsBounded = true;
+			mIsInSlackForm = true;
 
 		} else {
 			/* Original problem is infeasible. */
@@ -395,6 +460,7 @@ public class Simplex {
 
 			if (delta[l - 1] == Double.NaN) {
 				// Problem is unbounded.
+				mIsBounded = false;
 				return false;
 			} else {
 				pivot(l, e);
@@ -477,7 +543,7 @@ public class Simplex {
 			}
 		}
 
-		return b.toString();
+		return b.toString().trim();
 	}
 
 	/**
@@ -495,30 +561,21 @@ public class Simplex {
 
 		s.solve();
 
-		/*
-		 * s.setObjectiveFuntion(new double[] { 0, 3, 1, 2 }, MAXIMIZE);
-		 * 
-		 * s.addConstraint(new double[] { 1, 1, 3 }, LTE, 30);
-		 * s.addConstraint(new double[] { 2, 2, 5 }, LTE, 24);
-		 * s.addConstraint(new double[] { 4, 1, 2 }, LTE, 36);
-		 * 
-		 * System.out.println(s);
-		 * 
-		 * s.solve();
-		 * 
-		 * System.out.println(Arrays.toString(s.mB));
-		 * System.out.println(Arrays.toString(s.mN));
-		 */
+		System.out.println(Arrays.toString(s.getSolution()));
 
-		/*
-		 * System.out.println(s);
-		 * 
-		 * s.pivot(6, 1); System.out.println(s);
-		 * 
-		 * s.pivot(5, 3); System.out.println(s);
-		 * 
-		 * s.pivot(3, 2); System.out.println(s);
-		 */
+		s = new Simplex();
+		s.setObjectiveFuntion(new double[] { 0, 3, 1, 2 }, MAXIMIZE);
+
+		s.addConstraint(new double[] { 1, 1, 3 }, LTE, 30);
+		s.addConstraint(new double[] { 2, 2, 5 }, LTE, 24);
+		s.addConstraint(new double[] { 4, 1, 2 }, LTE, 36);
+
+		System.out.println(s);
+
+		s.solve();
+		
+		System.out.println(Arrays.toString(s.getSolution()));
+
 	}
 
 }
