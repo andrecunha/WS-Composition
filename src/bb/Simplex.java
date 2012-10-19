@@ -27,6 +27,7 @@ public class Simplex {
 
 	private ArrayList<Constraint> mConstraints;
 	private int mObjective;
+	private double[] mOriginalObjectiveFunction;
 
 	private boolean mIsInSlackForm;
 	private boolean mIsFeasible;
@@ -72,7 +73,7 @@ public class Simplex {
 			Constraint c2 = new Constraint(c);
 			mConstraints.add(c2);
 		}
-		
+
 		mObjective = s.mObjective;
 
 		mIsInSlackForm = s.mIsInSlackForm;
@@ -108,6 +109,8 @@ public class Simplex {
 	 *            Either MINIMIZE or MAXIMIZE.
 	 */
 	public void setObjectiveFuntion(double[] objectiveFunction, int objective) {
+		mOriginalObjectiveFunction = Arrays.copyOf(objectiveFunction,
+				objectiveFunction.length);
 		mv = objectiveFunction[0];
 		mc = Arrays.copyOfRange(objectiveFunction, 1, objectiveFunction.length);
 		mObjective = objective;
@@ -466,7 +469,7 @@ public class Simplex {
 		while ((e = findEnteringVariable()) > 0) {
 			double[] delta = new double[mB.length + mN.length];
 			double minDelta = Double.MAX_VALUE;
-			
+
 			for (int i : mB) {
 				if (mA[i - 1][e - 1] > 0) {
 					delta[i - 1] = mb[i - 1] / mA[i - 1][e - 1];
@@ -518,6 +521,21 @@ public class Simplex {
 			}
 		}
 		return solution;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public double getObjectiveValueOfOptimalSolution() {
+		double result = mOriginalObjectiveFunction[0];
+		double[] solution = getSolution();
+
+		for (int i = 0; i < getOriginalNoVariables(); i++) {
+			result += solution[i] * mOriginalObjectiveFunction[i + 1];
+		}
+
+		return result;
 	}
 
 	@Override
@@ -609,7 +627,8 @@ public class Simplex {
 		//s.solve();
 
 		//System.out.println(Arrays.toString(s.getSolution()));
-		
+		//System.out.println(s.getObjectiveValueOfOptimalSolution());
+
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
 		s.setObjectiveFuntion(new double[] { 0, 1, 2 }, MAXIMIZE);
@@ -618,12 +637,13 @@ public class Simplex {
 		s.addConstraint(new double[] { 1, 0 }, LTE, 2);
 		s.addConstraint(new double[] { 0, 1 }, LTE, 3);
 
-		//System.out.println(s);
+		System.out.println(s);
 
-		//s.solve();
+		s.solve();
 
-		//System.out.println(Arrays.toString(s.getSolution()));
-		
+		System.out.println(Arrays.toString(s.getSolution()));
+		System.out.println(s.getObjectiveValueOfOptimalSolution());
+
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
 		s.setObjectiveFuntion(new double[] { 0, 1, 3 }, MAXIMIZE);
@@ -633,25 +653,25 @@ public class Simplex {
 		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
 		s.addConstraint(new double[] { 5, 1 }, LTE, 18);
 
-		//System.out.println(s);
+		// System.out.println(s);
 
-		//s.solve();
+		// s.solve();
 
-		//System.out.println(Arrays.toString(s.getSolution()));
-		
+		// System.out.println(Arrays.toString(s.getSolution()));
+
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
 		s.setObjectiveFuntion(new double[] { 0, -2, -2 }, MINIMIZE);
 
 		s.addConstraint(new double[] { 1, 1 }, LTE, 4);
 		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
-		s.addConstraint(new double[] { 0, 1 }, LTE, 7.0/2.0);
+		s.addConstraint(new double[] { 0, 1 }, LTE, 7.0 / 2.0);
 
-		System.out.println(s);
+		// System.out.println(s);
 
-		s.solve();
+		// s.solve();
 
-		System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(Arrays.toString(s.getSolution()));
 	}
 
 }
