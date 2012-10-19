@@ -10,12 +10,9 @@ public class BB {
 	private Simplex mRelaxedBaseProblem;
 	private boolean[] mIntegerVariables;
 	
-	public BB(Simplex relaxedBaseProblem) {
+	public BB(Simplex relaxedBaseProblem, boolean[] integerVariables) {
 		mNodesQueue = new PriorityQueue<Simplex>(10, new SimplexComparator());
 		mRelaxedBaseProblem = relaxedBaseProblem;
-	}
-	
-	public void setIntegerVariables(boolean[] integerVariables) {
 		mIntegerVariables = integerVariables;
 	}
 
