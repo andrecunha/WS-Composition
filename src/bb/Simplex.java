@@ -244,7 +244,7 @@ public class Simplex {
 		}
 		mc[leaving - 1] = -mc[entering - 1] * mA[entering - 1][leaving - 1];
 
-		/* Compute the new set of basic and nonbasic variables. */
+		/* Compute the new set of basic and non-basic variables. */
 		for (int i = 0; i < mN.length; i++) {
 			if (mN[i] == entering) {
 				mN[i] = leaving;
@@ -462,10 +462,11 @@ public class Simplex {
 	private void doMainSimplexLoop() {
 		int e;
 		int l = -1;
-		double[] delta = new double[mB.length + mN.length];
-		double minDelta = Double.MAX_VALUE;
 
 		while ((e = findEnteringVariable()) > 0) {
+			double[] delta = new double[mB.length + mN.length];
+			double minDelta = Double.MAX_VALUE;
+			
 			for (int i : mB) {
 				if (mA[i - 1][e - 1] > 0) {
 					delta[i - 1] = mb[i - 1] / mA[i - 1][e - 1];
@@ -580,6 +581,7 @@ public class Simplex {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		/* ---------------------------------------------------------- */
 		Simplex s = new Simplex();
 
 		s.setObjectiveFuntion(new double[] { 0, 2, -1 }, MAXIMIZE);
@@ -587,13 +589,14 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, -1 }, LTE, 2);
 		s.addConstraint(new double[] { 1, -5 }, LTE, -4);
 
-		System.out.println(s);
+		//System.out.println(s);
 
-		s.solve();
+		//s.solve();
 
-		System.out.println(s);
-		System.out.println(Arrays.toString(s.getSolution()));
+		//System.out.println(s);
+		//System.out.println(Arrays.toString(s.getSolution()));
 
+		/* ---------------------------------------------------------- */
 		s = new Simplex();
 		s.setObjectiveFuntion(new double[] { 0, 3, 1, 2 }, MAXIMIZE);
 
@@ -601,12 +604,54 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, 2, 5 }, LTE, 24);
 		s.addConstraint(new double[] { 4, 1, 2 }, LTE, 36);
 
+		//System.out.println(s);
+
+		//s.solve();
+
+		//System.out.println(Arrays.toString(s.getSolution()));
+		
+		/* ---------------------------------------------------------- */
+		s = new Simplex();
+		s.setObjectiveFuntion(new double[] { 0, 1, 2 }, MAXIMIZE);
+
+		s.addConstraint(new double[] { 1, 1 }, LTE, 4);
+		s.addConstraint(new double[] { 1, 0 }, LTE, 2);
+		s.addConstraint(new double[] { 0, 1 }, LTE, 3);
+
+		//System.out.println(s);
+
+		//s.solve();
+
+		//System.out.println(Arrays.toString(s.getSolution()));
+		
+		/* ---------------------------------------------------------- */
+		s = new Simplex();
+		s.setObjectiveFuntion(new double[] { 0, 1, 3 }, MAXIMIZE);
+
+		s.addConstraint(new double[] { 0, 1 }, LTE, 4);
+		s.addConstraint(new double[] { 1, 1 }, LTE, 6);
+		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
+		s.addConstraint(new double[] { 5, 1 }, LTE, 18);
+
+		//System.out.println(s);
+
+		//s.solve();
+
+		//System.out.println(Arrays.toString(s.getSolution()));
+		
+		/* ---------------------------------------------------------- */
+		s = new Simplex();
+		s.setObjectiveFuntion(new double[] { 0, -2, -2 }, MINIMIZE);
+
+		s.addConstraint(new double[] { 1, 1 }, LTE, 4);
+		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
+		s.addConstraint(new double[] { 0, 1 }, LTE, 7.0/2.0);
+
 		System.out.println(s);
 
 		s.solve();
 
 		System.out.println(Arrays.toString(s.getSolution()));
-
 	}
 
 }
