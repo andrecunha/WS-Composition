@@ -75,6 +75,9 @@ public class Simplex {
 		}
 
 		mObjective = s.mObjective;
+		mOriginalObjectiveFunction = Arrays.copyOf(
+				s.mOriginalObjectiveFunction,
+				s.mOriginalObjectiveFunction.length);
 
 		mIsInSlackForm = s.mIsInSlackForm;
 		mIsFeasible = s.mIsFeasible;
@@ -95,6 +98,17 @@ public class Simplex {
 	public void addConstraint(double[] a, int rel, double b) {
 		mConstraints.add(new Constraint(a, rel, b));
 		mIsInSlackForm = false;
+	}
+
+	/**
+	 * 
+	 * @param var
+	 */
+	public void addBinaryVariableConstraint(int var) {
+		double[] a = new double[getOriginalNoVariables()];
+		a[var - 1] = 1;
+
+		addConstraint(a, LTE, 1);
 	}
 
 	/**
@@ -119,10 +133,18 @@ public class Simplex {
 
 	/**
 	 * 
-	 * @return
+	 * @return The original objective function.
 	 */
-	private int getOriginalNoVariables() {
-		return mConstraints.get(0).a.length;
+	public double[] getOriginalObjectiveFunction() {
+		return mOriginalObjectiveFunction;
+	}
+
+	/**
+	 * 
+	 * @return The original number of variables.
+	 */
+	public int getOriginalNoVariables() {
+		return mOriginalObjectiveFunction.length - 1;
 	}
 
 	/**
@@ -538,6 +560,22 @@ public class Simplex {
 		return result;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isFeasible() {
+		return mIsFeasible;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isBounded() {
+		return mIsBounded;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
@@ -607,12 +645,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, -1 }, LTE, 2);
 		s.addConstraint(new double[] { 1, -5 }, LTE, -4);
 
-		//System.out.println(s);
+		// System.out.println(s);
 
-		//s.solve();
+		// s.solve();
 
-		//System.out.println(s);
-		//System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(s);
+		// System.out.println(Arrays.toString(s.getSolution()));
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -622,12 +660,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, 2, 5 }, LTE, 24);
 		s.addConstraint(new double[] { 4, 1, 2 }, LTE, 36);
 
-		//System.out.println(s);
+		// System.out.println(s);
 
-		//s.solve();
+		// s.solve();
 
-		//System.out.println(Arrays.toString(s.getSolution()));
-		//System.out.println(s.getObjectiveValueOfOptimalSolution());
+		// System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(s.getObjectiveValueOfOptimalSolution());
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
