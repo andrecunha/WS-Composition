@@ -11,6 +11,7 @@ public class BB {
 	private Simplex mRelaxedBaseProblem;
 	private boolean[] mIntegerVariables;
 	private SimplexComparator mSimplexComparator;
+	private boolean mIsSolved;
 
 	public BB(Simplex baseRelaxedProblem, boolean[] integerVariables) {
 		mSimplexComparator = new SimplexComparator();
@@ -48,21 +49,23 @@ public class BB {
 	 * @return
 	 */
 	public boolean solve() {
-		mRelaxedBaseProblem.solve();
+		mIsSolved = true;
+		
+		if (!mRelaxedBaseProblem.solve()) {
+			/* Relaxed base problem is infeasible. */
+			return false;
+		}
 		mNodesQueue.add(mRelaxedBaseProblem);
 
 		while (!mNodesQueue.isEmpty()) {
 			Simplex currentProblem = mNodesQueue.remove();
 
-			if (!currentProblem.isFeasible() || !currentProblem.isBounded()) {
-				// Prune by infeasibility.
-				continue;
-			}
-
 			if (mBestSolution != null
 					&& mSimplexComparator
 							.compare(currentProblem, mBestSolution) < 0) {
-				// Problem is feasible, but we already have a better solution.
+				/* Problem is feasible, but we already have a better solution.
+				 * Prune by quality.
+				 */
 				continue;
 			}
 
@@ -74,7 +77,7 @@ public class BB {
 					mBestSolution = currentProblem;
 				} else if (mSimplexComparator.compare(currentProblem,
 						mBestSolution) > 0) {
-					/* Current solution is better than the best found. */
+					/* Current solution is better than the best found previously. */
 					mBestSolution = currentProblem;
 				}
 			} else {
@@ -98,9 +101,37 @@ public class BB {
 				}
 			}
 		}
-		return false;
+		
+		return (mBestSolution != null);
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public double[] getSolution() {
+		if (!mIsSolved) {
+			throw new IllegalStateException("Problem not solved.");
+		}
+		
+		return mBestSolution.getSolution();
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	public double getObjectiveValueOfOptimalSolution() {
+		if (!mIsSolved) {
+			throw new IllegalStateException("Problem not solved.");
+		}
+		if (mBestSolution == null) {
+			throw new IllegalStateException("Problem is either infeasible or unbounded.");
+		}
+		
+		return mBestSolution.getObjectiveValueOfOptimalSolution();
+	}
+	
 	/**
 	 * @param args
 	 */

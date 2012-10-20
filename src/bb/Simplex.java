@@ -32,6 +32,7 @@ public class Simplex {
 	private boolean mIsInSlackForm;
 	private boolean mIsFeasible;
 	private boolean mIsBounded;
+	private boolean mIsSolved;
 
 	public Simplex() {
 		mConstraints = new ArrayList<Constraint>();
@@ -43,30 +44,11 @@ public class Simplex {
 	 * @param s
 	 */
 	public Simplex(Simplex s) {
-		if (s.mA != null) {
-			mA = new double[s.mA.length][];
-			for (int i = 0; i < mA.length; i++) {
-				mA[i] = Arrays.copyOf(s.mA[i], s.mA[i].length);
-			}
-		}
-
-		if (s.mb != null) {
-			mb = Arrays.copyOf(s.mb, s.mb.length);
-		}
-
 		if (s.mc != null) {
 			mc = Arrays.copyOf(s.mc, s.mc.length);
 		}
 
 		mv = s.mv;
-
-		if (s.mB != null) {
-			mB = Arrays.copyOf(s.mB, s.mB.length);
-		}
-
-		if (s.mN != null) {
-			mN = Arrays.copyOf(s.mN, s.mN.length);
-		}
 
 		mConstraints = new ArrayList<Constraint>(s.mConstraints.size());
 		for (Constraint c : s.mConstraints) {
@@ -78,10 +60,9 @@ public class Simplex {
 		mOriginalObjectiveFunction = Arrays.copyOf(
 				s.mOriginalObjectiveFunction,
 				s.mOriginalObjectiveFunction.length);
-
-		mIsInSlackForm = s.mIsInSlackForm;
-		mIsFeasible = s.mIsFeasible;
-		mIsBounded = s.mIsBounded;
+		
+		mIsInSlackForm = false;
+		mIsSolved = false;
 	}
 
 	/**
@@ -98,8 +79,7 @@ public class Simplex {
 	public void addConstraint(double[] a, int rel, double b) {
 		mConstraints.add(new Constraint(a, rel, b));
 		mIsInSlackForm = false;
-		mIsFeasible = false;
-		mIsBounded = false;
+		mIsSolved = false;
 	}
 
 	/**
@@ -112,8 +92,7 @@ public class Simplex {
 
 		addConstraint(a, LTE, 1);
 		
-		mIsFeasible = false;
-		mIsBounded = false;
+		mIsSolved = false;
 	}
 
 	/**
@@ -134,6 +113,7 @@ public class Simplex {
 		mc = Arrays.copyOfRange(objectiveFunction, 1, objectiveFunction.length);
 		mObjective = objective;
 		mIsInSlackForm &= (objective == MAXIMIZE);
+		mIsSolved = false;
 	}
 
 	/**
@@ -340,10 +320,9 @@ public class Simplex {
 		}
 
 		// New objective function is -x0.
-		double[] newC = new double[lAux.mc.length + 1];
-		newC[newC.length - 1] = -1;
-		lAux.mc = newC;
-		lAux.mv = 0;
+		double[] newObjectiveFunction = new double[lAux.mOriginalObjectiveFunction.length + 1];
+		newObjectiveFunction[newObjectiveFunction.length - 1] = -1;
+		lAux.setObjectiveFuntion(newObjectiveFunction, MAXIMIZE);
 
 		int n = lAux.getOriginalNoVariables(); // Includes "x0".
 		lAux.toSlackForm();
@@ -353,7 +332,7 @@ public class Simplex {
 
 		// The basic solution of lAux is now feasible.
 		lAux.doMainSimplexLoop();
-
+		
 		double[] solution = lAux.getSolution();
 		if (solution[solution.length - 1] == 0) {
 			/*
@@ -518,6 +497,10 @@ public class Simplex {
 				pivot(l, e);
 			}
 		}
+		
+		mIsSolved = true;
+		mIsFeasible = true;
+		mIsBounded = true;
 	}
 
 	/**
@@ -527,11 +510,12 @@ public class Simplex {
 	public boolean solve() {
 		initializeSimplex();
 		if (!mIsFeasible || !mIsBounded) {
+			mIsSolved = true;
 			return false;
 		}
 
 		doMainSimplexLoop();
-
+		
 		return mIsBounded;
 	}
 
@@ -540,6 +524,13 @@ public class Simplex {
 	 * @return
 	 */
 	public double[] getSolution() {
+		if (!mIsSolved) {
+			throw new IllegalStateException("Problem not solved.");
+		}
+		if (!mIsFeasible || !mIsBounded) {
+			return null;
+		}
+		
 		int n = getOriginalNoVariables();
 		double[] solution = new double[n];
 		for (int i : mB) {
@@ -555,6 +546,16 @@ public class Simplex {
 	 * @return
 	 */
 	public double getObjectiveValueOfOptimalSolution() {
+		if (!mIsSolved) {
+			throw new IllegalStateException("Problem not solved.");
+		}
+		if (!mIsFeasible) {
+			throw new IllegalStateException("Problem is infeasible.");
+		}
+		if (!mIsBounded) {
+			throw new IllegalStateException("Problem is unbounded.");
+		}
+		
 		double result = mOriginalObjectiveFunction[0];
 		double[] solution = getSolution();
 
@@ -570,6 +571,9 @@ public class Simplex {
 	 * @return
 	 */
 	public boolean isFeasible() {
+		if (!mIsSolved) {
+			throw new IllegalStateException("Problem not solved.");
+		}
 		return mIsFeasible;
 	}
 
@@ -578,13 +582,15 @@ public class Simplex {
 	 * @return
 	 */
 	public boolean isBounded() {
+		if (!mIsSolved) {
+			throw new IllegalStateException("Problem not solved.");
+		}
 		return mIsBounded;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-
 		
 		if (mIsInSlackForm) {
 			Arrays.sort(mB);
@@ -637,7 +643,7 @@ public class Simplex {
 			}
 		}
 
-		if (mIsFeasible && mIsBounded) {
+		if (mIsSolved && mIsFeasible && mIsBounded) {
 			b.append("Solution: " + Arrays.toString(getSolution()) + " @ "
 					+ getObjectiveValueOfOptimalSolution());
 		}
