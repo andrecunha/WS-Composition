@@ -48,12 +48,21 @@ public class BB {
 	 * @return
 	 */
 	public boolean solve() {
+		mRelaxedBaseProblem.solve();
 		mNodesQueue.add(mRelaxedBaseProblem);
 
 		while (!mNodesQueue.isEmpty()) {
 			Simplex currentProblem = mNodesQueue.remove();
-			if (!currentProblem.solve()) {
-				// Problem is infeasible or unbounded. Prune by infeasibility.
+
+			if (!currentProblem.isFeasible() || !currentProblem.isBounded()) {
+				// Prune by infeasibility.
+				continue;
+			}
+
+			if (mBestSolution != null
+					&& mSimplexComparator
+							.compare(currentProblem, mBestSolution) < 0) {
+				// Problem is feasible, but we already have a better solution.
 				continue;
 			}
 
@@ -80,8 +89,13 @@ public class BB {
 				leftChild.addConstraint(a, Simplex.LTE, Math.floor(value));
 				rightChild.addConstraint(a, Simplex.GTE, Math.ceil(value));
 
-				mNodesQueue.add(leftChild);
-				mNodesQueue.add(rightChild);
+				if (leftChild.solve()) {
+					mNodesQueue.add(leftChild);
+				}
+				
+				if (rightChild.solve()) {
+					mNodesQueue.add(rightChild);
+				}
 			}
 		}
 		return false;
@@ -92,23 +106,43 @@ public class BB {
 	 */
 	public static void main(String[] args) {
 		Simplex baseRelaxedProblem = new Simplex();
-		
+
+		/*
 		baseRelaxedProblem.setObjectiveFuntion(new double[] { 0, 8, 11, 6, 4 },
 				Simplex.MAXIMIZE);
-		baseRelaxedProblem.addConstraint(new double[] {5, 7, 4, 3}, Simplex.LTE, 14);
+		baseRelaxedProblem.addConstraint(new double[] { 5, 7, 4, 3 },
+				Simplex.LTE, 14);
 		baseRelaxedProblem.addBinaryVariableConstraint(1);
 		baseRelaxedProblem.addBinaryVariableConstraint(2);
 		baseRelaxedProblem.addBinaryVariableConstraint(3);
 		baseRelaxedProblem.addBinaryVariableConstraint(4);
+		*/
 		
+		/*
+		baseRelaxedProblem.setObjectiveFuntion(new double[] {0, 1, 1}, Simplex.MAXIMIZE);
+		baseRelaxedProblem.addConstraint(new double[] {2, 5}, Simplex.LTE, 16);
+		baseRelaxedProblem.addConstraint(new double[] {6, 5}, Simplex.LTE, 30);
+		*/
+		
+		baseRelaxedProblem.setObjectiveFuntion(new double[] {0, 10, 6, 4}, Simplex.MAXIMIZE);
+		baseRelaxedProblem.addConstraint(new double[] { 1, 1, 1 }, Simplex.LTE, 100);
+		baseRelaxedProblem.addConstraint(new double[] { 10, 4, 5 }, Simplex.LTE, 600);
+		baseRelaxedProblem.addConstraint(new double[] { 2, 2, 6 }, Simplex.LTE, 300);
+
+		/*
 		System.out.println(baseRelaxedProblem);
+		baseRelaxedProblem.solve();
+		System.out.println(baseRelaxedProblem);
+		baseRelaxedProblem.solve();
+		System.out.println(baseRelaxedProblem);
+		*/
 		
-		boolean[] integerVariables = new boolean[4];
+		boolean[] integerVariables = new boolean[3];
 		Arrays.fill(integerVariables, true);
 		
 		BB bb = new BB(baseRelaxedProblem, integerVariables);
 		bb.solve();
-		
+
 		System.out.println(bb.mBestSolution);
 	}
 }

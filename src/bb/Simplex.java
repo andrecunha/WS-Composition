@@ -98,6 +98,8 @@ public class Simplex {
 	public void addConstraint(double[] a, int rel, double b) {
 		mConstraints.add(new Constraint(a, rel, b));
 		mIsInSlackForm = false;
+		mIsFeasible = false;
+		mIsBounded = false;
 	}
 
 	/**
@@ -109,6 +111,9 @@ public class Simplex {
 		a[var - 1] = 1;
 
 		addConstraint(a, LTE, 1);
+		
+		mIsFeasible = false;
+		mIsBounded = false;
 	}
 
 	/**
@@ -580,6 +585,7 @@ public class Simplex {
 	public String toString() {
 		StringBuilder b = new StringBuilder();
 
+		
 		if (mIsInSlackForm) {
 			Arrays.sort(mB);
 			Arrays.sort(mN);
@@ -598,11 +604,12 @@ public class Simplex {
 				}
 				b.append("\n");
 			}
+
 		} else {
 			b.append(mObjective == MINIMIZE ? "Minimize:\n\t" : "Maximize:\n\n");
-			b.append("z = " + String.format("%+6.3g", mv));
-			for (int j = 0; j < mc.length; j++) {
-				b.append("\t" + String.format("%+6.3g", mc[j]) + " x" + (j + 1));
+			b.append("z = " + String.format("%+6.3g", mOriginalObjectiveFunction[0]));
+			for (int j = 1; j < mOriginalObjectiveFunction.length; j++) {
+				b.append("\t" + String.format("%+6.3g", mOriginalObjectiveFunction[j]) + " x" + j);
 			}
 
 			b.append("\n\nSubject to:\n");
@@ -630,6 +637,11 @@ public class Simplex {
 			}
 		}
 
+		if (mIsFeasible && mIsBounded) {
+			b.append("Solution: " + Arrays.toString(getSolution()) + " @ "
+					+ getObjectiveValueOfOptimalSolution());
+		}
+		
 		return b.toString().trim();
 	}
 
