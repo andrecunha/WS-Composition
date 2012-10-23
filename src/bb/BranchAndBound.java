@@ -10,7 +10,7 @@ import java.util.PriorityQueue;
  * @author Andre Luiz Verucci da Cunha
  * 
  */
-public class BB {
+public class BranchAndBound {
 
 	/**
 	 * The queue containing the active nodes.
@@ -50,7 +50,7 @@ public class BB {
 	 * @param integerVariables
 	 *            The variables that should be integer.
 	 */
-	public BB(Simplex baseRelaxedProblem, boolean[] integerVariables) {
+	public BranchAndBound(Simplex baseRelaxedProblem, boolean[] integerVariables) {
 		mSimplexComparator = new SimplexComparator();
 		mNodesQueue = new PriorityQueue<Simplex>(10, mSimplexComparator);
 		mRelaxedBaseProblem = baseRelaxedProblem;
@@ -227,7 +227,7 @@ public class BB {
 		boolean[] integerVariables = new boolean[3];
 		Arrays.fill(integerVariables, true);
 
-		BB bb = new BB(baseRelaxedProblem, integerVariables);
+		BranchAndBound bb = new BranchAndBound(baseRelaxedProblem, integerVariables);
 		bb.solve();
 
 		System.out.println(bb.mBestSolution);

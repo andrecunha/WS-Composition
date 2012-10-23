@@ -174,6 +174,14 @@ public class QoSAttribute {
 	public double[][] getValues() {
 		return mValues;
 	}
+	
+	/**
+	 * Returns the aggregation method of this attribute.
+	 * @return The aggregation method of this attribute.
+	 */
+	public int getAggregationMethod() {
+		return mAggregationMethod;
+	}
 
 	/**
 	 * Calculates the total QoS of each concrete service.
