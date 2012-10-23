@@ -81,6 +81,14 @@ public class DynamicProgramming extends Thread {
 			int destinationConcrete, double weight) {
 		mEdgesWeights[originAbstract][originConcrete][destinationConcrete] = weight;
 	}
+	
+	/**
+	 * Returns the solution found.
+	 * @return The solution found.
+	 */
+	public int[] getSolution() {
+		return mSolution;
+	}
 
 	/**
 	 * Adds the given level to the partial solution, considering that all of the
