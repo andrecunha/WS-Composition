@@ -15,17 +15,17 @@ public class DynamicProgramming extends Thread {
 	/**
 	 * The solution found by the algorithm.
 	 */
-	private int[] mPartialSolution;
+	private int[] mSolution;
 
 	/**
-	 * The total QoS of each node.
+	 * The QoS of each node.
 	 */
-	private double[][] mTotalQoS;
+	private double[][] mQoSValues;
 
 	/**
-	 * The total QoS of each node in the partial solution.
+	 * The accumulated QoS of each partial solution.
 	 */
-	private double[] mPartialAccumQoS;
+	private double[] mAccumQoS;
 
 	/**
 	 * The weight of each edge.
@@ -35,22 +35,22 @@ public class DynamicProgramming extends Thread {
 	/**
 	 * Default constructor.
 	 * 
-	 * @param qosAttributes
-	 *            A vector containing the QoS attributes that will be used.
+	 * @param qosValues
+	 *            The QoS value associated with each node.
 	 */
-	public DynamicProgramming(QoSAttribute[] qosAttributes) {
-		mPartialSolution = new int[qosAttributes[0].getValues().length];
-		Arrays.fill(mPartialSolution, -1);
+	public DynamicProgramming(double[][] qosValues) {
+		mSolution = new int[qosValues.length];
+		Arrays.fill(mSolution, -1);
 
-		mPartialAccumQoS = new double[qosAttributes[0].getValues().length];
+		mAccumQoS = new double[qosValues.length];
 
-		mTotalQoS = QoSAttribute.calculateTotalQoS(qosAttributes);
+		mQoSValues = qosValues;
 
-		mEdgesWeights = new double[qosAttributes[0].getValues().length - 1][][];
+		mEdgesWeights = new double[qosValues.length - 1][][];
 		for (int i = 0; i < mEdgesWeights.length; i++) {
-			mEdgesWeights[i] = new double[qosAttributes[0].getValues()[i].length][];
+			mEdgesWeights[i] = new double[qosValues[i].length][];
 			for (int j = 0; j < mEdgesWeights[i].length; j++) {
-				mEdgesWeights[i][j] = new double[mTotalQoS[i + 1].length];
+				mEdgesWeights[i][j] = new double[mQoSValues[i + 1].length];
 			}
 		}
 	}
@@ -83,27 +83,27 @@ public class DynamicProgramming extends Thread {
 	}
 
 	/**
-	 * Adds the given level to the partial solution, considering that all the
-	 * posterior levels are already in it.
+	 * Adds the given level to the partial solution, considering that all of the
+	 * posterior levels have already been added.
 	 * 
 	 * @param level
 	 *            The level to be added to the solution.
 	 */
-	private boolean addLevelToPartialSolution(int level) {
-		int noConcreteServices = mTotalQoS[level].length;
+	private boolean addLevelToSolution(int level) {
+		int noConcreteServices = mQoSValues[level].length;
 
 		double maxAggregatedQoS = Double.MIN_VALUE;
 		int indexOfOptimalService = -1;
 		double aggregatedQoS;
 
 		for (int j = 0; j < noConcreteServices; j++) {
-			if (mEdgesWeights[level][j][mPartialSolution[level + 1]] == Double.NaN) {
+			if (mEdgesWeights[level][j][mSolution[level + 1]] == Double.NaN) {
 				continue;
 			}
 
-			aggregatedQoS = mTotalQoS[level][j]
-					+ mEdgesWeights[level][j][mPartialSolution[level + 1]]
-					+ mPartialAccumQoS[level + 1];
+			aggregatedQoS = mQoSValues[level][j]
+					+ mEdgesWeights[level][j][mSolution[level + 1]]
+					+ mAccumQoS[level + 1];
 
 			if (aggregatedQoS > maxAggregatedQoS) {
 				maxAggregatedQoS = aggregatedQoS;
@@ -115,33 +115,32 @@ public class DynamicProgramming extends Thread {
 			return false;
 		}
 
-		mPartialSolution[level] = indexOfOptimalService;
-		mPartialAccumQoS[level] = mPartialAccumQoS[level + 1]
-				+ maxAggregatedQoS;
+		mSolution[level] = indexOfOptimalService;
+		mAccumQoS[level] = mAccumQoS[level + 1] + maxAggregatedQoS;
 
 		return true;
 	}
 
 	@Override
 	public void run() {
-		int noAbstractServices = mTotalQoS.length;
+		int noAbstractServices = mQoSValues.length;
 
 		/* First, we add the last level to the partial solution. */
 		int indexOfOptimalService = -1;
 		double maxTotalQoS = Double.MIN_VALUE;
-		for (int i = 0; i < mTotalQoS[noAbstractServices - 1].length; i++) {
-			if (mTotalQoS[noAbstractServices - 1][i] > maxTotalQoS) {
+		for (int i = 0; i < mQoSValues[noAbstractServices - 1].length; i++) {
+			if (mQoSValues[noAbstractServices - 1][i] > maxTotalQoS) {
 				indexOfOptimalService = i;
-				maxTotalQoS = mTotalQoS[noAbstractServices - 1][i];
+				maxTotalQoS = mQoSValues[noAbstractServices - 1][i];
 			}
 		}
-		mPartialAccumQoS[noAbstractServices - 1] = maxTotalQoS;
-		mPartialSolution[noAbstractServices - 1] = indexOfOptimalService;
+		mAccumQoS[noAbstractServices - 1] = maxTotalQoS;
+		mSolution[noAbstractServices - 1] = indexOfOptimalService;
 
 		/* Then, we add the other levels, in a backward fashion. */
 		for (int i = noAbstractServices - 2; i >= 0; i--) {
-			if (!addLevelToPartialSolution(i)) {
-				mPartialSolution = null;
+			if (!addLevelToSolution(i)) {
+				mSolution = null;
 				break;
 			}
 		}
@@ -171,12 +170,13 @@ public class DynamicProgramming extends Thread {
 				QoSAttribute.AGGREGATE_BY_AVERAGE, 0.5f);
 
 		QoSAttribute[] attrs = { attrSum, attrProd, attrAvg };
+		double[][] qosValues = QoSAttribute.calculateTotalQoS(attrs);
 
-		DynamicProgramming dynProg = new DynamicProgramming(attrs);
+		DynamicProgramming dynProg = new DynamicProgramming(qosValues);
 		dynProg.setEdgesWeights(edgesWeights);
 
 		dynProg.run();
 
-		System.out.println(Arrays.toString(dynProg.mPartialSolution));
+		System.out.println(Arrays.toString(dynProg.mSolution));
 	}
 }
