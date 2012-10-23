@@ -88,6 +88,7 @@ public class DynamicProgramming extends Thread {
 	 * 
 	 * @param level
 	 *            The level to be added to the solution.
+	 * @return Whether it was possible to add the level to the solution.
 	 */
 	private boolean addLevelToSolution(int level) {
 		int noConcreteServices = mQoSValues[level].length;

@@ -5,33 +5,93 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 /**
+ * This class implements the Simplex algorithm, based on the book "Introduction
+ * to Algorithms", 2nd Edition, by T. Cormen, C. Leiserson, R. Rivest and C.
+ * Stein. Please refer to this book for a detailed description of the functions
+ * and variables defined here.
  * 
  * @author Andre Luiz Verucci da Cunha
  * 
  */
 public class Simplex {
 
+	/* Possible signals of the constraints. */
+
 	public static final int EQUALS = 0x00;
 	public static final int LTE = 0x01;
 	public static final int GTE = 0x02;
 
+	/* Possible objectives of the optimization process. */
+
 	public static final int MINIMIZE = 0x00;
 	public static final int MAXIMIZE = 0x01;
 
+	/**
+	 * The A matrix, which represents the coefficient of each variable in each
+	 * constraint.
+	 */
 	private double[][] mA;
+
+	/**
+	 * The b vector, which represents the constant term in each constraint.
+	 */
 	private double[] mb;
+
+	/**
+	 * The c vector, which represents the coefficient of each variable in the
+	 * objective function.
+	 */
 	private double[] mc;
+
+	/**
+	 * The v parameter, which represents the constant term of the objective
+	 * function.
+	 */
 	private double mv;
+
+	/**
+	 * The B index set, which contains the index of the basic variables.
+	 */
 	private int[] mB;
+
+	/**
+	 * The N index set, which contains the index of the non-basic variables.
+	 */
 	private int[] mN;
 
+	/**
+	 * The problem constraints.
+	 */
 	private ArrayList<Constraint> mConstraints;
+
+	/**
+	 * The problem's objective (either MINIMIZE or MAXIMIZE).
+	 */
 	private int mObjective;
+
+	/**
+	 * The original objective function.
+	 */
 	private double[] mOriginalObjectiveFunction;
 
+	/**
+	 * Represents whether the problem has been normalized to the slack form.
+	 */
 	private boolean mIsInSlackForm;
+
+	/**
+	 * Represents whether the problem was found to be feasible.
+	 */
 	private boolean mIsFeasible;
+
+	/**
+	 * Represents whether the problem was found to be bounded.
+	 */
 	private boolean mIsBounded;
+
+	/**
+	 * Represents whether the problem was already solved.
+	 */
 	private boolean mIsSolved;
 
 	public Simplex() {
@@ -42,6 +102,7 @@ public class Simplex {
 	 * Copy constructor.
 	 * 
 	 * @param s
+	 *            The Simplex instance to copy.
 	 */
 	public Simplex(Simplex s) {
 		if (s.mc != null) {
@@ -60,7 +121,7 @@ public class Simplex {
 		mOriginalObjectiveFunction = Arrays.copyOf(
 				s.mOriginalObjectiveFunction,
 				s.mOriginalObjectiveFunction.length);
-		
+
 		mIsInSlackForm = false;
 		mIsSolved = false;
 	}
@@ -70,11 +131,12 @@ public class Simplex {
 	 * 
 	 * a[0]x[1] + a[1]x[2] + ... + a[n-1]x[n] rel b
 	 * 
-	 * Where "rel" is either EQUALS, LTE or GTE.
-	 * 
 	 * @param a
+	 *            The coefficients of the constraint.
 	 * @param rel
+	 *            Either LTE, EQUALS or GTE.
 	 * @param b
+	 *            The right-hand side.
 	 */
 	public void addConstraint(double[] a, int rel, double b) {
 		mConstraints.add(new Constraint(a, rel, b));
@@ -83,15 +145,17 @@ public class Simplex {
 	}
 
 	/**
+	 * Sets the x_{var} variable as binary.
 	 * 
 	 * @param var
+	 *            The variable to be set as binary.
 	 */
 	public void addBinaryVariableConstraint(int var) {
 		double[] a = new double[getOriginalNoVariables()];
 		a[var - 1] = 1;
 
 		addConstraint(a, LTE, 1);
-		
+
 		mIsSolved = false;
 	}
 
@@ -117,7 +181,7 @@ public class Simplex {
 	}
 
 	/**
-	 * 
+	 * Returns the original objective function.
 	 * @return The original objective function.
 	 */
 	public double[] getOriginalObjectiveFunction() {
@@ -125,7 +189,7 @@ public class Simplex {
 	}
 
 	/**
-	 * 
+	 * Returns the original number of variables.
 	 * @return The original number of variables.
 	 */
 	public int getOriginalNoVariables() {
@@ -215,9 +279,12 @@ public class Simplex {
 	}
 
 	/**
+	 * Removes x_{leaving} from the base and replaces it by x_{entering}.
 	 * 
 	 * @param leaving
+	 *            The leaving variable.
 	 * @param entering
+	 *            The entering variable.
 	 */
 	private void pivot(int leaving, int entering) {
 		/* Compute the coefficients of the equation for new variable xe. */
@@ -271,8 +338,9 @@ public class Simplex {
 	}
 
 	/**
+	 * Finds the index of the minimum b_i.
 	 * 
-	 * @return
+	 * @return The index of the minimum b_i.
 	 */
 	private int findIndexOfMinimumB() {
 		int k = -1;
@@ -290,7 +358,7 @@ public class Simplex {
 	}
 
 	/**
-	 * 
+	 * Initializes simplex with a slack form whose basic solution is feasible.
 	 */
 	private void initializeSimplex() {
 		toStandardForm();
@@ -332,7 +400,7 @@ public class Simplex {
 
 		// The basic solution of lAux is now feasible.
 		lAux.doMainSimplexLoop();
-		
+
 		double[] solution = lAux.getSolution();
 		if (solution[solution.length - 1] == 0) {
 			/*
@@ -452,8 +520,9 @@ public class Simplex {
 	}
 
 	/**
+	 * Finds the variable that should enter the base.
 	 * 
-	 * @return
+	 * @return The variable that should enter the base.
 	 */
 	private int findEnteringVariable() {
 		for (int i : mN) {
@@ -465,8 +534,7 @@ public class Simplex {
 	}
 
 	/**
-	 * 
-	 * @return
+	 * Performs the main simplex loop.
 	 */
 	private void doMainSimplexLoop() {
 		int e;
@@ -497,15 +565,16 @@ public class Simplex {
 				pivot(l, e);
 			}
 		}
-		
+
 		mIsSolved = true;
 		mIsFeasible = true;
 		mIsBounded = true;
 	}
 
 	/**
+	 * Solves this optimization problem.
 	 * 
-	 * @return
+	 * @return True if problem is feasible and bounded; false otherwise.
 	 */
 	public boolean solve() {
 		initializeSimplex();
@@ -515,13 +584,16 @@ public class Simplex {
 		}
 
 		doMainSimplexLoop();
-		
+
 		return mIsBounded;
 	}
 
 	/**
+	 * Returns the solution found, or null if it is infeasible or unbounded,
+	 * raising an exception if "solve" wasn't called before.
 	 * 
-	 * @return
+	 * @return The solution to this problem, or null if it is infeasible or
+	 *         unbounded.
 	 */
 	public double[] getSolution() {
 		if (!mIsSolved) {
@@ -530,7 +602,7 @@ public class Simplex {
 		if (!mIsFeasible || !mIsBounded) {
 			return null;
 		}
-		
+
 		int n = getOriginalNoVariables();
 		double[] solution = new double[n];
 		for (int i : mB) {
@@ -542,8 +614,11 @@ public class Simplex {
 	}
 
 	/**
+	 * Returns the objective value associated with the optimal solution, raising
+	 * an exception if the problem wasn't solved, or if it's infeasible or
+	 * unbounded.
 	 * 
-	 * @return
+	 * @return The objective value of the optimal solution.
 	 */
 	public double getObjectiveValueOfOptimalSolution() {
 		if (!mIsSolved) {
@@ -555,7 +630,7 @@ public class Simplex {
 		if (!mIsBounded) {
 			throw new IllegalStateException("Problem is unbounded.");
 		}
-		
+
 		double result = mOriginalObjectiveFunction[0];
 		double[] solution = getSolution();
 
@@ -567,8 +642,10 @@ public class Simplex {
 	}
 
 	/**
+	 * Return true if this problem is feasible, raising an exception if it
+	 * wasn't solved.
 	 * 
-	 * @return
+	 * @return True if this problem is feasible; false otherwise.
 	 */
 	public boolean isFeasible() {
 		if (!mIsSolved) {
@@ -578,8 +655,10 @@ public class Simplex {
 	}
 
 	/**
+	 * Return true if this problem is bounded, raising an exception if it
+	 * wasn't solved.
 	 * 
-	 * @return
+	 * @return True if this problem is bounded; false otherwise.
 	 */
 	public boolean isBounded() {
 		if (!mIsSolved) {
@@ -591,7 +670,7 @@ public class Simplex {
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		
+
 		if (mIsInSlackForm) {
 			Arrays.sort(mB);
 			Arrays.sort(mN);
@@ -613,9 +692,12 @@ public class Simplex {
 
 		} else {
 			b.append(mObjective == MINIMIZE ? "Minimize:\n\t" : "Maximize:\n\n");
-			b.append("z = " + String.format("%+6.3g", mOriginalObjectiveFunction[0]));
+			b.append("z = "
+					+ String.format("%+6.3g", mOriginalObjectiveFunction[0]));
 			for (int j = 1; j < mOriginalObjectiveFunction.length; j++) {
-				b.append("\t" + String.format("%+6.3g", mOriginalObjectiveFunction[j]) + " x" + j);
+				b.append("\t"
+						+ String.format("%+6.3g", mOriginalObjectiveFunction[j])
+						+ " x" + j);
 			}
 
 			b.append("\n\nSubject to:\n");
@@ -647,7 +729,7 @@ public class Simplex {
 			b.append("Solution: " + Arrays.toString(getSolution()) + " @ "
 					+ getObjectiveValueOfOptimalSolution());
 		}
-		
+
 		return b.toString().trim();
 	}
 
