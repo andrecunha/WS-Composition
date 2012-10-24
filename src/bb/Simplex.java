@@ -1,5 +1,7 @@
 package bb;
 
+import general.DoubleComparator;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -145,6 +147,16 @@ public class Simplex {
 	}
 
 	/**
+	 * Adds a constraint to the model.
+	 * 
+	 * @param c
+	 *            The constraint to be added.
+	 */
+	public void addConstraint(Constraint c) {
+		addConstraint(c.a, c.rel, c.b);
+	}
+
+	/**
 	 * Sets the x_{var} variable as binary.
 	 * 
 	 * @param var
@@ -182,6 +194,7 @@ public class Simplex {
 
 	/**
 	 * Returns the original objective function.
+	 * 
 	 * @return The original objective function.
 	 */
 	public double[] getOriginalObjectiveFunction() {
@@ -190,6 +203,7 @@ public class Simplex {
 
 	/**
 	 * Returns the original number of variables.
+	 * 
 	 * @return The original number of variables.
 	 */
 	public int getOriginalNoVariables() {
@@ -289,6 +303,11 @@ public class Simplex {
 	private void pivot(int leaving, int entering) {
 		/* Compute the coefficients of the equation for new variable xe. */
 		mb[entering - 1] = mb[leaving - 1] / mA[leaving - 1][entering - 1];
+
+		if (Double.isInfinite(mb[entering - 1])) {
+			System.out.println("mb is infinite");
+		}
+
 		for (int j : mN) {
 			if (j != entering) {
 				mA[entering - 1][j - 1] = mA[leaving - 1][j - 1]
@@ -402,7 +421,8 @@ public class Simplex {
 		lAux.doMainSimplexLoop();
 
 		double[] solution = lAux.getSolution();
-		if (solution[solution.length - 1] == 0) {
+
+		if (DoubleComparator.compare(solution[solution.length - 1], 0.0) == 0) {
 			/*
 			 * Original problem is feasible. We must remove x0 and adjust the
 			 * objective function and the constraints.
@@ -487,11 +507,36 @@ public class Simplex {
 				}
 			}
 
-			/* We now adjust the basic and non-basic index sets. */
+			/*
+			 * We now adjust the basic and non-basic index sets, remembering
+			 * that "x0" is NOT necessarily a basic variable.
+			 */
 
-			mB = new int[lAux.mB.length];
+			boolean x0IsBasic = false;
+			for (int s : lAux.mB) {
+				if (s == n) {
+					x0IsBasic = true;
+					break;
+				}
+			}
+
+			int mBLength;
+			int mNLength;
+			if (x0IsBasic) {
+				mBLength = lAux.mB.length - 1;
+				mNLength = lAux.mN.length;
+			} else {
+				mBLength = lAux.mB.length;
+				mNLength = lAux.mN.length - 1;
+			}
+
+			mB = new int[mBLength];
 			int r = 0;
 			for (int s : lAux.mB) {
+				if (s == lAux.getOriginalNoVariables()) {
+					continue;
+				}
+
 				if (s < lAux.getOriginalNoVariables()) {
 					mB[r++] = s;
 				} else {
@@ -499,7 +544,7 @@ public class Simplex {
 				}
 			}
 
-			mN = new int[lAux.mN.length - 1];
+			mN = new int[mNLength];
 
 			r = 0;
 			for (int s : lAux.mN) {
@@ -526,7 +571,7 @@ public class Simplex {
 	 */
 	private int findEnteringVariable() {
 		for (int i : mN) {
-			if (mc[i - 1] > 0) {
+			if (DoubleComparator.compare(mc[i - 1], 0d) > 0) {
 				return i;
 			}
 		}
@@ -545,19 +590,20 @@ public class Simplex {
 			double minDelta = Double.MAX_VALUE;
 
 			for (int i : mB) {
-				if (mA[i - 1][e - 1] > 0) {
+				if (DoubleComparator.compare(mA[i - 1][e - 1], 0d) > 0) {
 					delta[i - 1] = mb[i - 1] / mA[i - 1][e - 1];
 				} else {
 					delta[i - 1] = Double.NaN;
 				}
 
-				if (delta[i - 1] < minDelta) {
+				if (!Double.isNaN(delta[i - 1])
+						&& DoubleComparator.compare(delta[i - 1], minDelta) < 0) {
 					minDelta = delta[i - 1];
 					l = i;
 				}
 			}
 
-			if (delta[l - 1] == Double.NaN) {
+			if (Double.isNaN(delta[l - 1])) {
 				// Problem is unbounded.
 				mIsBounded = false;
 				return;
@@ -655,8 +701,8 @@ public class Simplex {
 	}
 
 	/**
-	 * Return true if this problem is bounded, raising an exception if it
-	 * wasn't solved.
+	 * Return true if this problem is bounded, raising an exception if it wasn't
+	 * solved.
 	 * 
 	 * @return True if this problem is bounded; false otherwise.
 	 */
@@ -745,12 +791,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, -1 }, LTE, 2);
 		s.addConstraint(new double[] { 1, -5 }, LTE, -4);
 
-		// System.out.println(s);
+		System.out.println(s);
 
-		// s.solve();
+		s.solve();
 
-		// System.out.println(s);
-		// System.out.println(Arrays.toString(s.getSolution()));
+		System.out.println(s);
+		System.out.println(Arrays.toString(s.getSolution()));
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -760,12 +806,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, 2, 5 }, LTE, 24);
 		s.addConstraint(new double[] { 4, 1, 2 }, LTE, 36);
 
-		// System.out.println(s);
+		System.out.println(s);
 
-		// s.solve();
+		s.solve();
 
-		// System.out.println(Arrays.toString(s.getSolution()));
-		// System.out.println(s.getObjectiveValueOfOptimalSolution());
+		System.out.println(Arrays.toString(s.getSolution()));
+		System.out.println(s.getObjectiveValueOfOptimalSolution());
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -791,11 +837,11 @@ public class Simplex {
 		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
 		s.addConstraint(new double[] { 5, 1 }, LTE, 18);
 
-		// System.out.println(s);
+		System.out.println(s);
 
-		// s.solve();
+		s.solve();
 
-		// System.out.println(Arrays.toString(s.getSolution()));
+		System.out.println(Arrays.toString(s.getSolution()));
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -805,11 +851,11 @@ public class Simplex {
 		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
 		s.addConstraint(new double[] { 0, 1 }, LTE, 7.0 / 2.0);
 
-		// System.out.println(s);
+		System.out.println(s);
 
-		// s.solve();
+		s.solve();
 
-		// System.out.println(Arrays.toString(s.getSolution()));
+		System.out.println(Arrays.toString(s.getSolution()));
 	}
 
 }
