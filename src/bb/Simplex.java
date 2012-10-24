@@ -303,9 +303,13 @@ public class Simplex {
 	private void pivot(int leaving, int entering) {
 		/* Compute the coefficients of the equation for new variable xe. */
 		mb[entering - 1] = mb[leaving - 1] / mA[leaving - 1][entering - 1];
-
+		
+		System.out.println("e = " + entering + ", l = " + leaving);
+		System.out.println(this + "\n\n");
+		
 		if (Double.isInfinite(mb[entering - 1])) {
-			System.out.println("mb is infinite");
+			System.out.println("mb is infinite; e = " + entering + ", l = "
+					+ leaving);
 		}
 
 		for (int j : mN) {
@@ -583,9 +587,15 @@ public class Simplex {
 	 */
 	private void doMainSimplexLoop() {
 		int e;
-		int l = -1;
+		int l;
 
 		while ((e = findEnteringVariable()) > 0) {
+			l = -1;
+			
+			if (e == 20) {
+				System.out.println("PARA TUDO!!!");
+			}
+			
 			double[] delta = new double[mB.length + mN.length];
 			double minDelta = Double.MAX_VALUE;
 
@@ -603,7 +613,8 @@ public class Simplex {
 				}
 			}
 
-			if (Double.isNaN(delta[l - 1])) {
+			//if (l == -1 || Double.isNaN(delta[l - 1])) {
+			if (l == -1) {
 				// Problem is unbounded.
 				mIsBounded = false;
 				return;
@@ -718,8 +729,8 @@ public class Simplex {
 		StringBuilder b = new StringBuilder();
 
 		if (mIsInSlackForm) {
-			Arrays.sort(mB);
-			Arrays.sort(mN);
+			//Arrays.sort(mB);
+			//Arrays.sort(mN);
 
 			b.append("z\t=\t" + String.format("%+6.3g", mv));
 			for (int j : mN) {
@@ -791,12 +802,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, -1 }, LTE, 2);
 		s.addConstraint(new double[] { 1, -5 }, LTE, -4);
 
-		System.out.println(s);
+		// System.out.println(s);
 
-		s.solve();
+		// s.solve();
 
-		System.out.println(s);
-		System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(s);
+		// System.out.println(Arrays.toString(s.getSolution()));
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -806,12 +817,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, 2, 5 }, LTE, 24);
 		s.addConstraint(new double[] { 4, 1, 2 }, LTE, 36);
 
-		System.out.println(s);
+		// System.out.println(s);
 
-		s.solve();
+		// s.solve();
 
-		System.out.println(Arrays.toString(s.getSolution()));
-		System.out.println(s.getObjectiveValueOfOptimalSolution());
+		// System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(s.getObjectiveValueOfOptimalSolution());
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -821,12 +832,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 1, 0 }, LTE, 2);
 		s.addConstraint(new double[] { 0, 1 }, LTE, 3);
 
-		System.out.println(s);
+		// System.out.println(s);
 
-		s.solve();
+		// s.solve();
 
-		System.out.println(Arrays.toString(s.getSolution()));
-		System.out.println(s.getObjectiveValueOfOptimalSolution());
+		// System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(s.getObjectiveValueOfOptimalSolution());
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -837,11 +848,11 @@ public class Simplex {
 		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
 		s.addConstraint(new double[] { 5, 1 }, LTE, 18);
 
-		System.out.println(s);
+		// System.out.println(s);
 
-		s.solve();
+		// s.solve();
 
-		System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(Arrays.toString(s.getSolution()));
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
@@ -850,6 +861,19 @@ public class Simplex {
 		s.addConstraint(new double[] { 1, 1 }, LTE, 4);
 		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
 		s.addConstraint(new double[] { 0, 1 }, LTE, 7.0 / 2.0);
+
+		// System.out.println(s);
+
+		// s.solve();
+
+		// System.out.println(Arrays.toString(s.getSolution()));
+
+		/* ---------------------------------------------------------- */
+		s = new Simplex();
+		s.setObjectiveFuntion(new double[] { 0, 1, 1 }, MAXIMIZE);
+
+		s.addConstraint(new double[] { 1, -2 }, EQUALS, 0);
+		s.addConstraint(new double[] { 1, 0 }, LTE, 3);
 
 		System.out.println(s);
 

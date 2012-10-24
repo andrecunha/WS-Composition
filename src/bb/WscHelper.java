@@ -58,22 +58,27 @@ public class WscHelper {
 	public void addConstraintOnAttribute(int attributeIndex, int rel, double b) {
 		double[] a = new double[mNoConcreteServices];
 
+		int accum = 0;
 		switch (mQoSAttributes[attributeIndex].getAggregationMethod()) {
 		case QoSAttribute.AGGREGATE_BY_PRODUCT:
 			throw new IllegalArgumentException(
 					"Non-linear aggregation function.");
 		case QoSAttribute.AGGREGATE_BY_AVERAGE:
-			for (int i = 0; i < a.length; i++) {
-				a[i] = mQoSAttributes[attributeIndex].getValues()[i
-						/ mNoAbstractServices][i % mNoAbstractServices]
-						/ mNoAbstractServices;
+			for (int i = 0; i < mNoAbstractServices; i++) {
+				for (int j = 0; j < mQoSAttributes[attributeIndex].getValues()[i].length; j++) {
+					a[accum] = mQoSAttributes[attributeIndex].getValues()[i][j]
+							/ mNoAbstractServices;
+					accum++;
+				}
 			}
 			mConstraints.add(new Constraint(a, rel, b));
 			break;
 		case QoSAttribute.AGGREGATE_BY_SUM:
-			for (int i = 0; i < a.length; i++) {
-				a[i] = mQoSAttributes[attributeIndex].getValues()[i
-						/ mNoAbstractServices][i % mNoAbstractServices];
+			for (int i = 0; i < mNoAbstractServices; i++) {
+				for (int j = 0; j < mQoSAttributes[attributeIndex].getValues()[i].length; j++) {
+					a[accum] = mQoSAttributes[attributeIndex].getValues()[i][j];
+					accum++;
+				}
 			}
 			mConstraints.add(new Constraint(a, rel, b));
 			break;
@@ -117,7 +122,7 @@ public class WscHelper {
 		Simplex s = new Simplex();
 
 		double[][] totalQoS = QoSAttribute.calculateTotalQoS(mQoSAttributes);
-		
+
 		for (int i = 0; i < totalQoS.length; i++) {
 			System.out.println(Arrays.toString(totalQoS[i]));
 		}
@@ -143,7 +148,7 @@ public class WscHelper {
 				accum++;
 			}
 
-			s.addConstraint(a, Simplex.LTE, 1);
+			s.addConstraint(a, Simplex.EQUALS, 1);
 		}
 
 		/* Adding the user-defined constraints. */
@@ -175,13 +180,14 @@ public class WscHelper {
 		QoSAttribute[] attrs = new QoSAttribute[] { attrSum, attrProd, attrAvg };
 
 		WscHelper h = new WscHelper(attrs);
+		//h.addConstraintOnAttribute(0, Simplex.LTE, 1.5);
+
 		BranchAndBound bb = h.getProblem();
-		
+
 		System.out.println(bb);
-		
+
 		bb.solve();
-		
+
 		System.out.println(Arrays.toString(bb.getSolution()));
 	}
-
 }
