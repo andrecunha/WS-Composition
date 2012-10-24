@@ -1,5 +1,6 @@
 package dynprog;
 
+import general.DoubleComparator;
 import general.QoSAttribute;
 
 import java.util.Arrays;
@@ -81,9 +82,10 @@ public class DynamicProgramming extends Thread {
 			int destinationConcrete, double weight) {
 		mEdgesWeights[originAbstract][originConcrete][destinationConcrete] = weight;
 	}
-	
+
 	/**
 	 * Returns the solution found.
+	 * 
 	 * @return The solution found.
 	 */
 	public int[] getSolution() {
@@ -106,7 +108,7 @@ public class DynamicProgramming extends Thread {
 		double aggregatedQoS;
 
 		for (int j = 0; j < noConcreteServices; j++) {
-			if (mEdgesWeights[level][j][mSolution[level + 1]] == Double.NaN) {
+			if (Double.isNaN(mEdgesWeights[level][j][mSolution[level + 1]])) {
 				continue;
 			}
 
@@ -114,7 +116,7 @@ public class DynamicProgramming extends Thread {
 					+ mEdgesWeights[level][j][mSolution[level + 1]]
 					+ mAccumQoS[level + 1];
 
-			if (aggregatedQoS > maxAggregatedQoS) {
+			if (DoubleComparator.compare(aggregatedQoS, maxAggregatedQoS) > 0) {
 				maxAggregatedQoS = aggregatedQoS;
 				indexOfOptimalService = j;
 			}
@@ -138,7 +140,8 @@ public class DynamicProgramming extends Thread {
 		int indexOfOptimalService = -1;
 		double maxTotalQoS = Double.MIN_VALUE;
 		for (int i = 0; i < mQoSValues[noAbstractServices - 1].length; i++) {
-			if (mQoSValues[noAbstractServices - 1][i] > maxTotalQoS) {
+			if (DoubleComparator.compare(mQoSValues[noAbstractServices - 1][i],
+					maxTotalQoS) > 0) {
 				indexOfOptimalService = i;
 				maxTotalQoS = mQoSValues[noAbstractServices - 1][i];
 			}
