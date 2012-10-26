@@ -73,7 +73,7 @@ public class BranchAndBound {
 
 		for (int i = 1; i <= solution.length; i++) {
 			if (DoubleComparator.compare(solution[i - 1],
-					Math.floor(solution[i - 1])) != 0
+					(double) Math.round(solution[i - 1])) != 0
 					&& mIntegerVariables[i - 1]) {
 				if (bestVariable == -1) {
 					bestVariable = i;
@@ -121,7 +121,7 @@ public class BranchAndBound {
 				} else if (mSimplexComparator.compare(currentProblem,
 						mBestSolution) > 0) {
 					/*
-					 * Current solution is better than the best found
+					 * Current solution is better than the best one found
 					 * previously.
 					 */
 					mBestSolution = currentProblem;
@@ -188,6 +188,14 @@ public class BranchAndBound {
 		return mBestSolution.getObjectiveValueOfOptimalSolution();
 	}
 
+	/**
+	 * Returns the relaxed base problem.
+	 * @return the relaxed base problem.
+	 */
+	public Simplex getRelaxedProblem() {
+		return mRelaxedBaseProblem;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
