@@ -180,7 +180,7 @@ public class WscHelper {
 		QoSAttribute[] attrs = new QoSAttribute[] { attrSum, attrProd, attrAvg };
 
 		WscHelper h = new WscHelper(attrs);
-		//h.addConstraintOnAttribute(0, Simplex.LTE, 1.5);
+		h.addConstraintOnAttribute(0, Simplex.LTE, 1.2);
 
 		BranchAndBound bb = h.getProblem();
 

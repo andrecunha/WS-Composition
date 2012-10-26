@@ -107,23 +107,14 @@ public class Simplex {
 	 *            The Simplex instance to copy.
 	 */
 	public Simplex(Simplex s) {
-		/*
-		 * if (s.mc != null) { mc = Arrays.copyOf(s.mc, s.mc.length); }
-		 * 
-		 * mv = s.mv;
-		 */
-
+		setObjectiveFuntion(s.mOriginalObjectiveFunction, s.mObjective);
+		
 		mConstraints = new ArrayList<Constraint>(s.mConstraints.size());
 		for (Constraint c : s.mConstraints) {
 			Constraint c2 = new Constraint(c);
 			mConstraints.add(c2);
 		}
-
-		mObjective = s.mObjective;
-		mOriginalObjectiveFunction = Arrays.copyOf(
-				s.mOriginalObjectiveFunction,
-				s.mOriginalObjectiveFunction.length);
-
+		
 		mIsInSlackForm = false;
 		mIsSolved = false;
 	}
@@ -209,6 +200,22 @@ public class Simplex {
 	public int getOriginalNoVariables() {
 		return mOriginalObjectiveFunction.length - 1;
 	}
+	
+	/**
+	 * Returns the basic variables.
+	 * @return The basic variables.
+	 */
+	public int[] getBasicVariables() {
+		return Arrays.copyOf(mB, mB.length);
+	}
+	
+	/**
+	 * Returns the non-basic variables.
+	 * @return The non-basic variables.
+	 */
+	public int[] getNonBasicVariables() {
+		return Arrays.copyOf(mN, mN.length);
+	}
 
 	/**
 	 * Puts the current linear problem in the standard form.
@@ -273,9 +280,7 @@ public class Simplex {
 		 * We must allocate space for the new coefficients in the objective
 		 * function.
 		 */
-		double[] newC = new double[mc.length + mB.length];
-		System.arraycopy(mc, 0, newC, 0, mc.length);
-		mc = newC;
+		mc = Arrays.copyOf(mc, mc.length + mB.length);
 
 		/* All the constraints must be equalities. */
 		int n = mN.length + mB.length;
@@ -304,9 +309,16 @@ public class Simplex {
 		/* Compute the coefficients of the equation for new variable xe. */
 		mb[entering - 1] = mb[leaving - 1] / mA[leaving - 1][entering - 1];
 
+		/*
 		System.out.println("e = " + entering + ", l = " + leaving);
 		System.out.println(this + "\n\n");
 
+		if (Double.isInfinite(mb[entering - 1])) {
+			System.out.println("mb is infinite; e = " + entering + ", l = "
+					+ leaving);
+		}
+		*/
+		
 		if (Double.isInfinite(mb[entering - 1])) {
 			System.out.println("mb is infinite; e = " + entering + ", l = "
 					+ leaving);
@@ -400,18 +412,22 @@ public class Simplex {
 		// if (mConstraints.get(k - 1).b >= 0) {
 		if (DoubleComparator.compare(mConstraints.get(k - 1).b, 0d) >= 0) {
 			// The initial basic solution is feasible.
+			System.out.println("Initial solution is feasible.");
 			toSlackForm();
 			mIsFeasible = true;
 			mIsBounded = true;
 			return;
 		}
 
+		System.out.println("Initial solution is infeasible.");
+		
 		/*
 		 * If the initial basic solution is infeasible, we must create and solve
 		 * the auxiliary linear program.
 		 */
 		Simplex lAux = new Simplex(this);
 		int n = lAux.getOriginalNoVariables(); // DOESN'T INCLUDE "x0".
+		System.out.println("n = " + n);
 
 		// Adding -x0 to the end of each constraint.
 		for (Constraint c : lAux.mConstraints) {
@@ -437,23 +453,24 @@ public class Simplex {
 		double[] solution = lAux.getSolution();
 
 		if (DoubleComparator.compare(solution[solution.length - 1], 0.0) == 0) {
+			
+			{
+				boolean x0IsBasic = false;
+				for (int s : lAux.mB) {
+					if (s == n + 1) {
+						x0IsBasic = true;
+						break;
+					}
+				}
+				
+				if (x0IsBasic) {
+					System.out.println("lAux before: \n" + lAux);
+				}
+			}
+			
 			/*
 			 * Original problem is feasible. We must remove x0 and adjust the
 			 * objective function and the constraints.
-			 */
-
-			/*
-			 * double[] nc = new double[lAux.mc.length]; System.arraycopy(mc, 0,
-			 * nc, 0, mc.length); mc = nc;
-			 */
-
-			/*
-			 * First, we find i such that c_i != 0 in the original objective
-			 * function.
-			 */
-			/*
-			 * int i = -1; for (int j : lAux.mB) { if (mc[j - 1] != 0) { i = j;
-			 * break; } }
 			 */
 
 			/*
@@ -463,7 +480,7 @@ public class Simplex {
 			mc = Arrays.copyOf(mc, lAux.mc.length);
 			for (int i = 1; i <= originalNoVariables; i++) {
 				if (lAux.isBasicVariable(i)) {
-					//XXX: CHECAR!!!
+					//TODO: Check! It might be wrong!
 					mv += mc[i - 1] * lAux.mb[i - 1];
 
 					for (int j : lAux.mN) {
@@ -473,7 +490,7 @@ public class Simplex {
 				}
 			}
 
-			// Removing "x0".
+			/* Removing "x0". */
 			double[] aux = mc;
 			mc = new double[aux.length - 1];
 			for (int q = 1; q <= aux.length; q++) {
@@ -530,8 +547,7 @@ public class Simplex {
 			}
 
 			/*
-			 * We now adjust the basic and non-basic index sets, remembering
-			 * that "x0" is a basic variable.
+			 * We now adjust the basic and non-basic index sets.
 			 */
 
 			boolean x0IsBasic = false;
@@ -541,6 +557,8 @@ public class Simplex {
 					break;
 				}
 			}
+			
+			System.out.println("x0 is " + (x0IsBasic ? "Basic" : "Non-basic"));
 
 			int mBLength;
 			int mNLength;
@@ -565,24 +583,37 @@ public class Simplex {
 					mB[r++] = s - 1;
 				}
 			}
+			
+			if (x0IsBasic) {
+				System.out.println("lAux.mB = " + Arrays.toString(lAux.mB));
+				System.out.println("mB = " + Arrays.toString(mB));
+			}
 
 			mN = new int[mNLength];
-
 			r = 0;
 			for (int s : lAux.mN) {
-				if (s == lAux.getOriginalNoVariables()) {
+				if (s == n + 1) {
 					continue;
 				}
-				if (s < lAux.getOriginalNoVariables()) {
+				if (s < n + 1) {
 					mN[r++] = s;
 				} else {
 					mN[r++] = s - 1;
 				}
 			}
+			
+			if (x0IsBasic) {
+				System.out.println("lAux.mN = " + Arrays.toString(lAux.mN));
+				System.out.println("mN = " + Arrays.toString(mN));
+			}
 
 			mIsFeasible = true;
 			mIsBounded = true;
 			mIsInSlackForm = true;
+			
+			if (x0IsBasic) {
+				System.out.println("Problem after: \n" + this);
+			}
 		}
 	}
 
@@ -610,10 +641,6 @@ public class Simplex {
 		while ((e = findEnteringVariable()) > 0) {
 			l = -1;
 
-			if (e == 20) {
-				System.out.println("PARA TUDO!!!");
-			}
-
 			double[] delta = new double[mB.length + mN.length];
 			double minDelta = Double.MAX_VALUE;
 
@@ -630,8 +657,7 @@ public class Simplex {
 					l = i;
 				}
 			}
-
-			// if (l == -1 || Double.isNaN(delta[l - 1])) {
+			
 			if (l == -1) {
 				// Problem is unbounded.
 				mIsBounded = false;
@@ -819,12 +845,12 @@ public class Simplex {
 		s.addConstraint(new double[] { 2, -1 }, LTE, 2);
 		s.addConstraint(new double[] { 1, -5 }, LTE, -4);
 
-		System.out.println(s);
+		// System.out.println(s);
 
-		s.solve();
+		//s.solve();
 
-		System.out.println(s);
-		System.out.println(Arrays.toString(s.getSolution()));
+		// System.out.println(s);
+		// System.out.println(Arrays.toString(s.getSolution()));
 
 		/* ---------------------------------------------------------- */
 		s = new Simplex();
