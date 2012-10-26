@@ -9,7 +9,7 @@ public class Constraint {
 	public double b;
 	
 	public Constraint(double[] a, int rel, double b) {
-		this.a = a;
+		this.a = Arrays.copyOf(a, a.length);
 		this.rel = rel;
 		this.b = b;
 	}

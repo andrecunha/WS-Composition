@@ -168,7 +168,7 @@ public class WscHelper {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		double[][] values = { { 0.5, 0.5, 1 }, { 1, 0.5 }, { 0.5, 0.5, 1 } };
+		double[][] values = { { 1.0, 0.2, 0.5 }, { 0.5, 1.0}, { 0.2, 0.9, 1.0 } };
 
 		QoSAttribute attrSum = new QoSAttribute(values,
 				QoSAttribute.AGGREGATE_BY_SUM, 0.2);
