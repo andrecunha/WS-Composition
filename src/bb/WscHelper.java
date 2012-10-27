@@ -1,9 +1,10 @@
 package bb;
 
+import general.DoubleComparator;
+import general.QoSAttribute;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import general.QoSAttribute;
 
 /**
  * This class adapts a given Web Service composition problem, possibly with
@@ -34,6 +35,16 @@ public class WscHelper {
 	 * The number of concrete services.
 	 */
 	private int mNoConcreteServices;
+
+	/**
+	 * Whether this problem has already been solved.
+	 */
+	private boolean mIsSolved;
+
+	/**
+	 * The solution found by the last call to solve().
+	 */
+	private double[] mLastSolution;
 
 	public WscHelper(QoSAttribute[] attributes) {
 		mQoSAttributes = attributes;
@@ -85,6 +96,8 @@ public class WscHelper {
 		default:
 			break;
 		}
+
+		mIsSolved = false;
 	}
 
 	/**
@@ -95,6 +108,7 @@ public class WscHelper {
 	 */
 	public void addConstraint(Constraint c) {
 		mConstraints.add(c);
+		mIsSolved = false;
 	}
 
 	/**
@@ -109,6 +123,7 @@ public class WscHelper {
 	 */
 	public void addConstraint(double[] a, int rel, double b) {
 		mConstraints.add(new Constraint(a, rel, b));
+		mIsSolved = false;
 	}
 
 	/**
@@ -165,10 +180,58 @@ public class WscHelper {
 	}
 
 	/**
+	 * Generates and solves the corresponding problem.
+	 * 
+	 * @return The return value of BranchAndBound.solve() when applied to the
+	 *         generated problem.
+	 */
+	public boolean solveProblem() {
+		mIsSolved = true;
+
+		BranchAndBound bb = getProblem();
+		boolean result = bb.solve();
+		mLastSolution = bb.getSolution();
+
+		return result;
+	}
+
+	/**
+	 * Returns the solution in terms of which concrete service must be chosen
+	 * for each abstract service.
+	 * 
+	 * @return Which concrete service must be selected for each abstract
+	 *         service.
+	 */
+	public int[] getSolution() {
+		if (!mIsSolved) {
+			throw new IllegalStateException("Problem not solved.");
+		}
+
+		int[] solution = new int[mNoAbstractServices];
+
+		double[][] values = mQoSAttributes[0].getValues();
+
+		int next = 0;
+		for (int i = 0; i < values.length; i++) {
+			for (int j = 0; j < values[i].length; j++) {
+				if (DoubleComparator.compare(mLastSolution[next], 0d) == 0) {
+					next++;
+				} else if (DoubleComparator.compare(mLastSolution[next], 1d) == 0) {
+					solution[i] = j;
+					next += (values[i].length - j);
+				}
+			}
+		}
+
+		return solution;
+	}
+
+	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		double[][] values = { { 1.0, 0.2, 0.5 }, { 0.5, 1.0}, { 0.2, 0.9, 1.0 } };
+		double[][] values = { { 1.0, 0.5, 0.5 }, { 0.5, 1.0 },
+				{ 0.2, 0.5, 1.0 } };
 
 		QoSAttribute attrSum = new QoSAttribute(values,
 				QoSAttribute.AGGREGATE_BY_SUM, 0.2);
@@ -180,11 +243,16 @@ public class WscHelper {
 		QoSAttribute[] attrs = new QoSAttribute[] { attrSum, attrProd, attrAvg };
 
 		WscHelper h = new WscHelper(attrs);
-		h.addConstraintOnAttribute(0, Simplex.LTE, 1.2);
+		// h.addConstraintOnAttribute(0, Simplex.LTE, 2.6); //<<<<<<<<
+		// h.addConstraintOnAttribute(0, Simplex.LTE, 0.8); //<<<<<<<<
+		// h.addConstraintOnAttribute(0, Simplex.LTE, 1.2);
+		h.addConstraintOnAttribute(0, Simplex.LTE, 1.5);
 
 		BranchAndBound bb = h.getProblem();
 
-		System.out.println(bb);
+		// System.out.println(bb);
+		// Simplex s = bb.getRelaxedProblem();
+		// s.solve();
 
 		bb.solve();
 
