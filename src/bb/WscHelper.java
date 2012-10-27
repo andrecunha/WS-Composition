@@ -138,10 +138,6 @@ public class WscHelper {
 
 		double[][] totalQoS = QoSAttribute.calculateTotalQoS(mQoSAttributes);
 
-		for (int i = 0; i < totalQoS.length; i++) {
-			System.out.println(Arrays.toString(totalQoS[i]));
-		}
-
 		double[] objectiveFunction = new double[mNoConcreteServices + 1];
 		int accum = 0;
 		for (int i = 0; i < mNoAbstractServices; i++) {
@@ -199,12 +195,16 @@ public class WscHelper {
 	 * Returns the solution in terms of which concrete service must be chosen
 	 * for each abstract service.
 	 * 
-	 * @return Which concrete service must be selected for each abstract
-	 *         service.
+	 * @return A vector containing which concrete service should be selected for
+	 *         each abstract service, or null if the problem is infeasible.
 	 */
 	public int[] getSolution() {
 		if (!mIsSolved) {
 			throw new IllegalStateException("Problem not solved.");
+		}
+
+		if (mLastSolution == null) {
+			return null;
 		}
 
 		int[] solution = new int[mNoAbstractServices];
@@ -219,6 +219,7 @@ public class WscHelper {
 				} else if (DoubleComparator.compare(mLastSolution[next], 1d) == 0) {
 					solution[i] = j;
 					next += (values[i].length - j);
+					break;
 				}
 			}
 		}
@@ -246,16 +247,10 @@ public class WscHelper {
 		// h.addConstraintOnAttribute(0, Simplex.LTE, 2.6); //<<<<<<<<
 		// h.addConstraintOnAttribute(0, Simplex.LTE, 0.8); //<<<<<<<<
 		// h.addConstraintOnAttribute(0, Simplex.LTE, 1.2);
-		h.addConstraintOnAttribute(0, Simplex.LTE, 1.5);
+		// h.addConstraintOnAttribute(0, Simplex.LTE, 1.5);
 
-		BranchAndBound bb = h.getProblem();
+		h.solveProblem();
 
-		// System.out.println(bb);
-		// Simplex s = bb.getRelaxedProblem();
-		// s.solve();
-
-		bb.solve();
-
-		System.out.println(Arrays.toString(bb.getSolution()));
+		System.out.println(Arrays.toString(h.getSolution()));
 	}
 }
