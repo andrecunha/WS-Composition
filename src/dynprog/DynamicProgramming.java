@@ -103,7 +103,7 @@ public class DynamicProgramming extends Thread {
 	private boolean addLevelToSolution(int level) {
 		int noConcreteServices = mQoSValues[level].length;
 
-		double maxAggregatedQoS = Double.MIN_VALUE;
+		double maxAggregatedQoS = Double.NEGATIVE_INFINITY;
 		int indexOfOptimalService = -1;
 		double aggregatedQoS;
 
@@ -138,7 +138,7 @@ public class DynamicProgramming extends Thread {
 
 		/* First, we add the last level to the partial solution. */
 		int indexOfOptimalService = -1;
-		double maxTotalQoS = Double.MIN_VALUE;
+		double maxTotalQoS = Double.NEGATIVE_INFINITY;
 		for (int i = 0; i < mQoSValues[noAbstractServices - 1].length; i++) {
 			if (DoubleComparator.compare(mQoSValues[noAbstractServices - 1][i],
 					maxTotalQoS) > 0) {
