@@ -60,9 +60,10 @@ public class QoSAttribute {
 		/* Check for the validity of the given values. */
 		for (int i = 0; i < values.length; i++) {
 			for (int j = 0; j < values[i].length; j++) {
-				if (values[i][j] > 1f || values[i][j] < 0f) {
+				if (DoubleComparator.compare(values[i][j], 1d) > 0
+						|| DoubleComparator.compare(values[i][j], 0d) < 0) {
 					throw new IllegalArgumentException(
-							String.format("values[%d][%d] is invalid: %d", i,
+							String.format("values[%d][%d] is invalid: %g", i,
 									j, values[i][j]));
 				}
 			}
@@ -141,7 +142,7 @@ public class QoSAttribute {
 					count++;
 				}
 			}
-			aggregatedQoS =  (count != 0) ? (aggregatedQoS / count) : 0;
+			aggregatedQoS = (count != 0) ? (aggregatedQoS / count) : 0;
 			break;
 		default:
 			aggregatedQoS = -1;
@@ -174,9 +175,10 @@ public class QoSAttribute {
 	public double[][] getValues() {
 		return mValues;
 	}
-	
+
 	/**
 	 * Returns the aggregation method of this attribute.
+	 * 
 	 * @return The aggregation method of this attribute.
 	 */
 	public int getAggregationMethod() {

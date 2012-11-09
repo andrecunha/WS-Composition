@@ -1,5 +1,6 @@
 package aco;
 
+import general.DoubleComparator;
 import general.QoSAttribute;
 
 import java.util.Arrays;
@@ -88,10 +89,10 @@ public class ACO extends Thread {
 	 *            The minimum acceptable QoS.
 	 */
 	public ACO(int noAnts, QoSAttribute[] qosAttributes, double alpha,
-			double beta, double rho, double initialPheromone, int maxIterations,
-			double minQoS) {
+			double beta, double rho, double initialPheromone,
+			int maxIterations, double minQoS) {
 		mQoSAttributes = qosAttributes;
-		
+
 		mPheromone = new double[qosAttributes[0].getValues().length][];
 		for (int i = 0; i < mPheromone.length; i++) {
 			mPheromone[i] = new double[qosAttributes[0].getValues()[i].length];
@@ -122,14 +123,16 @@ public class ACO extends Thread {
 				mAnts[i].walk();
 			}
 			updatePheromone();
-			
-			if (!(mMaxIterations < 0 && mMinAggregatedQoS < 0)) {
+
+			if (!(mMaxIterations < 0 && DoubleComparator.compare(
+					mMinAggregatedQoS, 0d) < 0)) {
 				updateCurrentSolution();
 			}
 			mIterations++;
 		}
-		
-		if (mMaxIterations < 0 && mMinAggregatedQoS < 0) {
+
+		if (mMaxIterations < 0
+				&& DoubleComparator.compare(mMinAggregatedQoS, 0d) < 0) {
 			updateCurrentSolution();
 		}
 	}
@@ -164,22 +167,26 @@ public class ACO extends Thread {
 	private boolean shouldStop() {
 		if (isInterrupted()) {
 			return true;
-		} else if (mMaxIterations < 0 && mMinAggregatedQoS < 0) {
+		} else if (mMaxIterations < 0
+				&& DoubleComparator.compare(mMinAggregatedQoS, 0d) < 0) {
 			/* Run forever. */
 			return false;
-		} else if (mMaxIterations > 0 && mMinAggregatedQoS < 0) {
+		} else if (mMaxIterations > 0
+				&& DoubleComparator.compare(mMinAggregatedQoS, 0d) < 0) {
 			/* Run for a fixed amount of iterations. */
 			return mIterations >= mMaxIterations;
-		} else if (mMaxIterations < 0 && mMinAggregatedQoS > 0) {
+		} else if (mMaxIterations < 0
+				&& DoubleComparator.compare(mMinAggregatedQoS, 0d) > 0) {
 			/* Run until a solution with an acceptable QoS is found. */
-			return mCurrentAggregatedQoS >= mMinAggregatedQoS;
+			return DoubleComparator.compare(mCurrentAggregatedQoS,
+					mMinAggregatedQoS) >= 0;
 		} else { // mMaxIterations > 0 && mMinQoS > 0
 			/*
 			 * Run until an acceptable solution is found OR a maximum number of
 			 * iterations is reached.
 			 */
-			return mCurrentAggregatedQoS >= mMinAggregatedQoS
-					|| mIterations >= mMaxIterations;
+			return DoubleComparator.compare(mCurrentAggregatedQoS,
+					mMinAggregatedQoS) >= 0 || mIterations >= mMaxIterations;
 		}
 	}
 
