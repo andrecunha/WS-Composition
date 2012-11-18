@@ -712,10 +712,61 @@ public class Simplex {
 		return mIsBounded;
 	}
 
-	@Override
-	public String toString() {
+	/**
+	 * Returns a description of this problem in the "standard" form.
+	 * @return a description of this problem in the "standard" form.
+	 */
+	public String getStandardFormDescription() {
 		StringBuilder b = new StringBuilder();
+		
+		b.append(mObjective == MINIMIZE ? "Minimize:\n\t" : "Maximize:\n\n");
+		b.append("z = "
+				+ String.format("%+6.3g", mOriginalObjectiveFunction[0]));
+		for (int j = 1; j < mOriginalObjectiveFunction.length; j++) {
+			b.append("\t"
+					+ String.format("%+6.3g", mOriginalObjectiveFunction[j])
+					+ " x" + j);
+		}
 
+		b.append("\n\nSubject to:\n");
+		for (Constraint constraint : mConstraints) {
+			b.append("\t");
+			for (int j = 0; j < constraint.a.length; j++) {
+				b.append("\t" + String.format("%+6.3g", constraint.a[j])
+						+ " x" + (j + 1));
+			}
+			b.append("\t");
+			switch (constraint.rel) {
+			case EQUALS:
+				b.append("= \t");
+				break;
+			case GTE:
+				b.append(">=\t");
+				break;
+			case LTE:
+				b.append("<=\t");
+				break;
+			default:
+				break;
+			}
+			b.append(String.format("%+6.3g", constraint.b) + "\n");
+		}
+		
+		if (mIsSolved && mIsFeasible && mIsBounded) {
+			b.append("Solution: " + Arrays.toString(getSolution()) + " @ "
+					+ getObjectiveValueOfOptimalSolution());
+		}
+		
+		return b.toString().trim();
+	}
+	
+	/**
+	 * Returns a description of this problem in slack form.
+	 * @return a description of this problem in slack form.
+	 */
+	public String getSlackFormDescription() {
+		StringBuilder b = new StringBuilder();
+		
 		if (mIsInSlackForm) {
 			b.append("z\t=\t" + String.format("%+6.3g", mv));
 			for (int j : mN) {
@@ -733,46 +784,24 @@ public class Simplex {
 			}
 
 		} else {
-			b.append(mObjective == MINIMIZE ? "Minimize:\n\t" : "Maximize:\n\n");
-			b.append("z = "
-					+ String.format("%+6.3g", mOriginalObjectiveFunction[0]));
-			for (int j = 1; j < mOriginalObjectiveFunction.length; j++) {
-				b.append("\t"
-						+ String.format("%+6.3g", mOriginalObjectiveFunction[j])
-						+ " x" + j);
-			}
-
-			b.append("\n\nSubject to:\n");
-			for (Constraint constraint : mConstraints) {
-				b.append("\t");
-				for (int j = 0; j < constraint.a.length; j++) {
-					b.append("\t" + String.format("%+6.3g", constraint.a[j])
-							+ " x" + (j + 1));
-				}
-				b.append("\t");
-				switch (constraint.rel) {
-				case EQUALS:
-					b.append("= \t");
-					break;
-				case GTE:
-					b.append(">=\t");
-					break;
-				case LTE:
-					b.append("<=\t");
-					break;
-				default:
-					break;
-				}
-				b.append(String.format("%+6.3g", constraint.b) + "\n");
-			}
+			throw new IllegalStateException("Problem isn't in slack form.");
 		}
-
+		
 		if (mIsSolved && mIsFeasible && mIsBounded) {
 			b.append("Solution: " + Arrays.toString(getSolution()) + " @ "
 					+ getObjectiveValueOfOptimalSolution());
 		}
-
+		
 		return b.toString().trim();
+	}
+	
+	@Override
+	public String toString() {
+		if (mIsInSlackForm) {
+			return getSlackFormDescription();
+		} else {
+			return getStandardFormDescription();
+		}
 	}
 
 	/**
