@@ -156,7 +156,7 @@ public class Ant {
 			return QoSAttribute.calculateAggregatedQoS(mQoSValues,
 					mPartialSolution);
 		}
-		return 0f;
+		return 0d;
 	}
 
 	/**

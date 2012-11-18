@@ -719,7 +719,7 @@ public class Simplex {
 	public String getStandardFormDescription() {
 		StringBuilder b = new StringBuilder();
 		
-		b.append(mObjective == MINIMIZE ? "Minimize:\n\t" : "Maximize:\n\n");
+		b.append(mObjective == MINIMIZE ? "Minimize:\n\n" : "Maximize:\n\n");
 		b.append("z = "
 				+ String.format("%+6.3g", mOriginalObjectiveFunction[0]));
 		for (int j = 1; j < mOriginalObjectiveFunction.length; j++) {

@@ -121,7 +121,6 @@ public class BranchAndBound {
 			System.out
 					.println("### B&B ### Adding initial problem to the queue.");
 		}
-
 		mNodesQueue.add(mRelaxedBaseProblem);
 
 		while (!mNodesQueue.isEmpty()) {
@@ -139,7 +138,6 @@ public class BranchAndBound {
 				 * Problem is feasible, but we already have a better solution.
 				 * Prune by quality.
 				 */
-
 				if (mVerbose) {
 					System.out
 							.println("### B&B ### Problem is feasible, but we already have a better or equal solution. Prune by quality.");
@@ -176,7 +174,6 @@ public class BranchAndBound {
 				}
 			} else {
 				/* Solution has non-integer variables. We need to branch. */
-
 				if (mVerbose) {
 					System.out
 							.println("### B&B ### Solution has non-integer variables. Branching on variable x"
